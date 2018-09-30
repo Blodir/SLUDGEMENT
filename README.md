@@ -1,6 +1,18 @@
-# A bot template for [`python-sc2`](https://github.com/Dentosal/python-sc2)
+# A bot template for Reaktor Overmind Challenge
 
-Used by [Dentosal/sc2-bot-match-runner](https://github.com/Dentosal/sc2-bot-match-runner)
+Welcome to take part in the Overmind-Challenge. Let's get you started!
+
+## Creating a repo for the competition
+
+We have chosen to use Gitlab for the competition because it offers users free private repositories (which you probably wanna use)
+
+1. Create a duplicate of this repository. (Forking is not ideal, as you cannot make the fork private.)
+    * Create private empty repo on Gitlab
+    * Clone this repository
+    * Change the url for the origin of this repository with command ``git remote set-url origin [YOU-REPO-URL.git]``
+    * Push the code to origin ``git push -u origin --all``
+2. Give the "overmind-challenge"-user **reporter** access to the repository. This is used for automated ranking.
+3. (Optional) Invite your teammates, to share the glory.
 
 ## Setup
 
