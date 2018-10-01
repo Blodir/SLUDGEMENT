@@ -22,14 +22,14 @@ We have chosen to use Gitlab for the competition because it offers users free pr
 
 ## Identify your team
 
-1. Change the name and race of your bot from `botinfo.json`
+1. Change the name and race of your bot to `botinfo.json`
 
 ## Gearing up for the battle
 
 For development you will need Python version 3.6 or higher. Additionally the use of ``python-sc2`` is required.
 
 1. Follow the installation instruction from [python-sc2](https://github.com/Dentosal/python-sc2/blob/master/README.md)
-2. Try running the dummy-bot that we provided: ``python3 run_locally.py``
+2. Try running the bot: ``python3 run_locally.py``
 3. Start coding!
 
 
