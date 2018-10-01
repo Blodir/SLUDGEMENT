@@ -28,7 +28,7 @@ We have chosen to use Gitlab for the competition because it offers users free pr
 
 For development you will need Python version 3.6 or higher. Additionally the use of ``python-sc2`` is required.
 
-1. Follow the installation instruction from [python-sc2](https://github.com/Dentosal/python-sc2/blob/master/README.md)
+1. Follow the installation instruction for StarCraft II, StartCraft II maps, and python-sc2 from [python-sc2](https://github.com/Dentosal/python-sc2/blob/master/README.md)
 2. Try running the bot: ``python3 run_locally.py``
 3. Start coding!
 
