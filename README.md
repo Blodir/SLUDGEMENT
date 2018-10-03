@@ -32,7 +32,7 @@ For development you will need Python version 3.6 or higher. Additionally the use
 
 ## Starting points
 
-- [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki)
-- Your bot code goes to `bot/main.py`
-- You can modify the `run_locally.py` starter script to your liking
-- Do not modify `start_bot.py` as we use it to rank your bot.
+- [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki) contains useful material to get you started.
+- The code for your bot goes to `bot/main.py`
+- You can modify the `run_locally.py` starter script to your liking - you might want to increase the difficulty of the game-AI at some point.
+- The `start_bot.py` is used when ranking your bot and should not be modified.
