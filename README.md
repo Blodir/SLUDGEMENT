@@ -4,17 +4,13 @@ Welcome to take part in the Overmind-Challenge. In order to register for the com
 
 ## Creating a repo for the competition
 
-We have chosen to use Gitlab for the competition because it offers users free private repositories (which you probably wanna use)
+We have chosen to use Gitlab for the competition because it offers users free private repositories.
 
-1. Create a duplicate of this repository. (Forking is not ideal, as you cannot make the fork private.)
-    * Create private empty repo on Gitlab
-    * Clone this repository
-    * Change the url for the origin of this repository with command ``git remote set-url origin [YOU-REPO-URL.git]``
-        * Note, if using HTTPS. you need to change the url from ``https://gitlab.com/my_gitlab_user/myrepo.git`` to ``https://my_gitlab_user@gitlab.com/my_gitlab_user/myrepo.git``
-    * Push the code to origin ``git push -u origin --all``
+1. Fork this repo
+    * You probably want to change the "Project visibility" of the fork to Private - so nobody borrows your ideas.
 2. Give the "overmind-challenge"-user **reporter** access to the repository. This is used for automated ranking.
     * Under project **settings**, go to **members** subsection.
-    * As member to invite, query for overmind-challenge, and choose **Overmind Challenge @overmind-challenge**
+    * For the "Member to invite"-section, query for overmind-challenge, and choose "**Overmind Challenge @overmind-challenge**"
     * Set "Choose a role" as Reporter
     * Apply change, by clicking "Add to project"
 3. (Optional) Repeat step 2 and invite your teammates, to share the glory.
@@ -23,6 +19,7 @@ We have chosen to use Gitlab for the competition because it offers users free pr
 ## Identify your team
 
 1. Change the name and race of your bot to `botinfo.json`
+    * The race can be changed during the competition.
 
 ## Gearing up for the battle
 
