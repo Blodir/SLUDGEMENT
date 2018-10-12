@@ -1,12 +1,14 @@
 # Artificial Overmind Challenge by Reaktor – starter kit
 
+>Welcome fellow... TODO
+
 ## Creating a repo for the competition
 
 1. Fork this repo in Gitlab
     * Make sure that "Project visibility" of the fork is set to "Private"
 2. Give the `overmind-challenge` user **reporter** access to you forked repository
     * Project settings -> members -> invite as reporter
-4. Go to [awesome portal](https://overmind-ranker.herokuapp.com/admin/create-team) and register your team
+4. Go to [awesome portal](https://overmind-ranker.herokuapp.com/create-team) and register your team
 
 ## Gearing up for the battle
 
@@ -20,7 +22,6 @@ For development you will need Python version 3.6 or higher.
 6. Win the competition!
 
 Documentation for the `python-sc2`:
-
 - [The BotAI-class](https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class)
 - [Units and actions](https://github.com/Dentosal/python-sc2/wiki/Units-and-actions)
 
