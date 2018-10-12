@@ -16,9 +16,14 @@ For development you will need Python version 3.6 or higher.
 
 1. Follow the installation instruction for StarCraft II, StartCraft II maps, and `python-sc2` from [python-sc2](https://github.com/Dentosal/python-sc2/blob/master/README.md)
 2. Change the name and race of your bot to `botinfo.json`
-3. Run the bot: `python3 run_locally.py`
-4. ???
-5. Win the competition!
+3. Fix all FIXME items in `bot/main.py`
+4. Run the bot: `python3 run_locally.py`
+5. ???
+6. Win the competition!
+
+Documentation for the `python-sc2`:
+- [The BotAI-class](https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class)
+- [Units and actions](https://github.com/Dentosal/python-sc2/wiki/Units-and-actions)
 
 ## Tips
 
