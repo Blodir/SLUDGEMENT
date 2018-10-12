@@ -8,7 +8,7 @@
     * Make sure that "Project visibility" of the fork is set to "Private"
 2. Give the `overmind-challenge` user **reporter** access to you forked repository
     * Project settings -> members -> invite as reporter
-4. Go to TODO and register your team
+4. Go to [awesome portal](https://overmind-ranker.herokuapp.com/admin/create-team) and register your team
 
 ## Gearing up for the battle
 
