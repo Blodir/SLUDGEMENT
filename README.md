@@ -1,7 +1,5 @@
 # Artificial Overmind Challenge by Reaktor – starter kit
 
->Welcome fellow... TODO
-
 ## Creating a repo for the competition
 
 1. Fork this repo in Gitlab
