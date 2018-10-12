@@ -1,7 +1,5 @@
 # Artificial Overmind Challenge by Reaktor – starter kit
 
->Welcome fellow... TODO
-
 ## Creating a repo for the competition
 
 1. Fork this repo in Gitlab
@@ -22,6 +20,7 @@ For development you will need Python version 3.6 or higher.
 6. Win the competition!
 
 Documentation for the `python-sc2`:
+
 - [The BotAI-class](https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class)
 - [Units and actions](https://github.com/Dentosal/python-sc2/wiki/Units-and-actions)
 
