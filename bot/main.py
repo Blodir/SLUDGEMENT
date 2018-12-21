@@ -18,5 +18,7 @@ class MyBot(sc2.BotAI):
         if iteration == 0:
             await self.chat_send(f"Name: {self.NAME}")
             # FIXME: uncomment to have simplest winning strategy!
+            # actions = []
             # for worker in self.workers:
-            #     await self.do(worker.attack(self.enemy_start_locations[0]))
+            #     actions.append(worker.attack(self.enemy_start_locations[0]))
+            # await self.do_actions(actions)
