@@ -7,8 +7,9 @@
 1. Fork this repo in Gitlab
     * Make sure that "Project visibility" of the fork is set to "Private"
 2. Give the `overmind-challenge` user **reporter** access to you forked repository
-    * Project settings -> members -> invite as reporter
-4. Go to [awesome portal](https://overmind-ranker.herokuapp.com/create-team) and register your team
+    * Settings -> Members -> Invite as reporter
+3. Register your team on the [Articial Overmind Challenge site](https://overmind-ranker.herokuapp.com/create-team)
+    * Copy your repository URL from Gitlab (Project -> Clone -> HTTPS)
 
 ## Gearing up for the battle
 
