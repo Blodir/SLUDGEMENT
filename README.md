@@ -37,8 +37,8 @@ Documentation for the `python-sc2`:
 
 ## Rules
 
-- The competition will use [the official SEUL rules](http://seul.fi/esports/pelisaannot/turnaussaannot-starcraft-ii/#english-version) for appicable parts
-- Howver, since there are no human players or real time gameplay involved, and because bot may be quite deterministic in their nature:
+- The competition will use [the official SEUL rules](http://seul.fi/esports/pelisaannot/turnaussaannot-starcraft-ii/#english-version) for applicable parts
+- However, since there are no human players or real time gameplay involved, and because bots may be quite deterministic in their nature:
   * The "3. Other rules" section is not used
     + Bots should properly resign instead of just disconnecting
   * The "7. Fair play" forbids insulting others. However, we not only allow, but encourage you to mock the opposing bot using the in-game chat
@@ -52,6 +52,6 @@ Documentation for the `python-sc2`:
   * Map pool is static and decided by the organizers
     + All maps will be selected from the official ladder map pool, starting at the first season of 2017, available [here](https://github.com/Blizzard/s2client-proto#map-packs)
 - The organizers reserve the right to change the rules and technical limitations during the competition
-- Your git repo for the bot must not exceed one gigabyte
+- Your git repo for the bot must not exceed one gigabyte in size
 - Please connect us (e.g. in Discord) if you have any questions
 
