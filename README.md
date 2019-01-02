@@ -33,6 +33,7 @@ Documentation for the `python-sc2`:
 - The code for your bot goes to `bot/main.py`: simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
 - You can modify the `run_locally.py` starter script to your liking - you might want to increase the difficulty of the game-AI at some point.
 - The `start_bot.py` is used when ranking your bot and should not be modified.
+- If you need to use any Python dependencies, just paste the libraries into your team repo.
 
 
 ## Rules
