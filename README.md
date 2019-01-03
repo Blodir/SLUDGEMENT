@@ -26,6 +26,33 @@ Documentation for the `python-sc2`:
 - [The BotAI-class](https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class)
 - [Units and actions](https://github.com/Dentosal/python-sc2/wiki/Units-and-actions)
 
+## Example
+
+A worker rush is less than twenty lines of code:
+
+```python
+import sc2
+from sc2 import run_game, maps, Race, Difficulty
+from sc2.player import Bot, Computer
+
+class WorkerRushBot(sc2.BotAI):
+    async def on_step(self, iteration):
+        if iteration == 0:
+            actions = []
+            for worker in self.workers:
+                actions.append(worker.attack(self.enemy_start_locations[0]))
+            await self.do_actions(actions)
+
+run_game(maps.get("Abyssal Reef LE"), [
+    Bot(Race.Zerg, WorkerRushBot()),
+    Computer(Race.Protoss, Difficulty.Medium)
+], realtime=True)
+```
+
+This is probably the simplest bot that has any realistic chances of winning the game. We have ran it against the medium AI a few times, and once in a while it wins.
+
+You can find more examples in the [`examples/`](/examples) folder.
+
 ## Tips
 
 - [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki) contains useful material to get you started.
