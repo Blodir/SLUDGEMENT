@@ -29,7 +29,7 @@ Documentation for the `python-sc2`:
 ## Tips
 
 - [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki) contains useful material to get you started.
-- [Starcraft II AI Discord](https://discord.gg/qTZ65sh) has community at your fingertips.
+- [Starcraft II AI Discord](https://discord.gg/D9XEhWY) has community at your fingertips.
   * Note that this is separate from our official Discord server.
 - The code for your bot goes to `bot/main.py`: simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
 - You can modify the `run_locally.py` starter script to your liking - you might want to increase the difficulty of the game-AI at some point.
