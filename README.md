@@ -59,10 +59,10 @@ You can find more examples in the [`examples/`](/examples) folder.
 - The [Starcraft II AI Discord](https://discord.gg/D9XEhWY) gives you access to the community
   * Note that this is separate from our official Discord server
 - The code for your bot goes to `bot/main.py`: simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
-- You can modify the `run_locally.py` starter script to your liking as you might want to increase the difficulty of the game-AI at some poin
+- You can modify the `run_locally.py` starter script to your liking as you might want to increase the difficulty of the game-AI at some point
 - The `start_bot.py` is used when ranking your bot and should not be modified
+- On our servers, your code will be run on python 3.6. (currently, python 3.6.3)
 - If you need to use any Python dependencies, just paste the libraries into your team repo
-
 
 ## Rules
 
@@ -82,5 +82,8 @@ You can find more examples in the [`examples/`](/examples) folder.
     + All maps will be selected from the official ladder map pool starting with the first season of 2017, available [here](https://github.com/Blizzard/s2client-proto#map-packs)
 - The organizers reserve the right to change the rules and technical limitations during the competition
 - Your git repo for the bot must not exceed one gigabyte in size
+- Technical limitations:
+  * IO is not allowed. Don't use filesystem or networking.
+  * Starting threads or processes is not allowed. 
 - Please contact us (e.g. in Discord) if you have any questions
 
