@@ -58,10 +58,10 @@ You can find more examples in the [`examples/`](/examples) folder.
 - The [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki) contains useful material to get you started
 - The [Starcraft II AI Discord](https://discord.gg/D9XEhWY) gives you access to the community
   * Note that this is separate from our official Discord server
-- The code for your bot goes to `bot/main.py`: simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
-- You can modify the `run_locally.py` starter script to your liking as you might want to increase the difficulty of the game-AI at some point
-- The `start_bot.py` is used when ranking your bot and should not be modified
+- The code for your bot goes to [bot/main.py](bot/main.py): simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
+  * Further, our server-side runner expects to find a class names `MyBot` in this file.
 - On our servers, your code will be run on python 3.6. (currently, python 3.6.3)
+- You can modify the `run_locally.py` starter script to your liking as you might want to increase the difficulty of the game-AI at some point
 - If you need to use any Python dependencies, just paste the libraries into your team repo
 
 ## Rules
