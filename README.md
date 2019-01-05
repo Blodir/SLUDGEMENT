@@ -10,6 +10,7 @@
     * Settings -> Members -> Invite as reporter
 3. Register your team on the [Articial Overmind Challenge site](https://artificial-overmind.reaktor.com/)
     * Copy your repository URL from Gitlab (Project -> Clone -> HTTPS)
+4. You'll get an email with more instructions and link to your Team Dashboard!
 
 ## Gearing up for the battle
 
@@ -19,8 +20,8 @@ Note: for development you will need Python version 3.6 or higher.
 2. Change the name and race of your bot to `botinfo.json`
 3. Fix all FIXME items in `bot/main.py`
 4. Run the bot: `python3 run_locally.py`
-5. ???
-6. Win the competition!
+5. Push your code to Gitlab to start fighting your opponents. You'll see the results on your Team Dashboard (link in email)
+7. Win the competition!
 
 Documentation for the `python-sc2`:
 - [The BotAI-class](https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class)
@@ -56,13 +57,14 @@ You can find more examples in the [`examples/`](/examples) folder.
 ## Tips
 
 - The [Python SC2 Wiki](https://github.com/Dentosal/python-sc2/wiki) contains useful material to get you started
-- The [Starcraft II AI Discord](https://discord.gg/D9XEhWY) gives you access to the community
-  * Note that this is separate from our official Discord server
+- The [Starcraft II AI Discord](https://discord.gg/D9XEhWY) gives you access to the community and support
 - The code for your bot goes to [bot/main.py](bot/main.py): simple examples can be found at [python-sc2 examples](https://github.com/Dentosal/python-sc2/tree/master/examples)
   * Further, our server-side runner expects to find a class names `MyBot` in this file.
 - On our servers, your code will be run on python 3.6. (currently, python 3.6.3)
 - You can modify the `run_locally.py` starter script to your liking as you might want to increase the difficulty of the game-AI at some point
 - If you need to use any Python dependencies, just paste the libraries into your team repo
+- Push code to Gitlab early and push it often, to see your progress and make sure your bot works correctly on our servers.
+- Watch how your bot fares on the Ranking on the [Artificial Overmind Challenge site](https://artificial-overmind.reaktor.com/)  
 
 ## Rules
 
