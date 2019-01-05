@@ -8,7 +8,7 @@
     * Make sure that "Project visibility" is set to "Private"
 2. Give the `overmind-challenge` user **reporter** access to your forked repository
     * Settings -> Members -> Invite as reporter
-3. Register your team on the [Articial Overmind Challenge site](https://artificial-overmind.reaktor.com/)
+3. Register your team on the [Artificial Overmind Challenge site](https://artificial-overmind.reaktor.com/)
     * Copy your repository URL from Gitlab (Project -> Clone -> HTTPS)
 4. You'll get an email with more instructions and link to your Team Dashboard!
 
