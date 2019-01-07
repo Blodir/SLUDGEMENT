@@ -17,6 +17,7 @@
 Note: for development you will need Python version 3.6 or higher.
 
 1. Follow the installation instructions for StarCraft II, StartCraft II maps, and `python-sc2` from [python-sc2](https://github.com/Dentosal/python-sc2/blob/master/README.md)
+    * The Starcraft II game is free to play! Just follow the instructions above to get started.
 2. Change the name and race of your bot to `botinfo.json`
 3. Fix all FIXME items in `bot/main.py`
 4. Run the bot: `python3 run_locally.py`
