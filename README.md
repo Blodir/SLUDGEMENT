@@ -69,7 +69,7 @@ You can find more examples in the [`examples/`](/examples) folder.
 
 ## Rules
 
-- The competition will use [the official SEUL rules](http://seul.fi/esports/pelisaannot/turnaussaannot-starcraft-ii/#english-version) where applicable 
+- The competition will use [the official SEUL rules](https://seul.fi/e-urheilu/pelisaannot/turnaussaannot-starcraft-ii/#english-version) where applicable 
 - However, since there are no human players or real-time gameplay and because bots may be quite deterministic in their nature, we've made the following adjustments:
   * The "3. Other rules" section is not used
     + Bots should properly resign instead of just disconnecting
