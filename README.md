@@ -76,7 +76,8 @@ You can find more examples in the [`examples/`](/examples) folder.
   * The "7. Fair play" section forbids insulting others. However, we not only allow, but actively encourage you to mock the opposing bot using the in-game chat
     + Please remember to keep it fun and good-natured - we're not trying to make anybody feel bad but are here to have fun
   * Games will be played with a time limit. This is initially 30 minutes of in-game time, and will be updated later if it causes any issues
-  * Bot code crashing or exceeding the time limit will automatically result in a loss 
+  * Bot code crashing or exceeding the per-step time limit will automatically result in a loss
+    + Per-step limit is currently 2 seconds, but will be lowered it that becomes an issue later
   * Draw situations will not be replayed and the games will be marked as draws instead
   * If score-based evaluation is implemented during the competition, it will be used to resolve draws
     + In the finals, draw situations will be resolved by who has the higher army value at the end of the game if scores are not available
