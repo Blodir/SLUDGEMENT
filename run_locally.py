@@ -14,7 +14,7 @@ def main():
     run_game(maps.get("Catalyst LE"), [
         Bot(race, MyBot()),
         Computer(Race.Random, Difficulty.Medium)
-    ], realtime=False, step_time_limit=2.0, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
+    ], realtime=False, step_time_limit=4.0, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
 
 if __name__ == '__main__':
     main()

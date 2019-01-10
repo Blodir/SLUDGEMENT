@@ -1,6 +1,8 @@
 import json
 import operator
 import math
+import time
+import datetime
 from pathlib import Path
 
 import sc2
@@ -12,6 +14,7 @@ from sc2.ids.upgrade_id import UpgradeId
 from sc2.unit import Unit
 from sc2.units import Units
 from sc2.position import Point2
+from sc2.unit_command import UnitCommand
 
 from .priority_queue import PriorityQueue
 from .coroutine_switch import CoroutineSwitch
@@ -22,6 +25,7 @@ DRONE = UnitTypeId.DRONE
 HATCHERY = UnitTypeId.HATCHERY
 SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
 QUEEN = UnitTypeId.QUEEN
+MINERAL_FIELD = UnitTypeId.MINERALFIELD
 
 # Larva per minute from an injected hatch
 LARVA_RATE_PER_INJECT = 11.658
@@ -32,16 +36,13 @@ class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
 
-    def __init__(self):
-        self.expansion_location_switch: CoroutineSwitch = CoroutineSwitch(self.next_expansion_location)
-        return super().__init__()
-
     # On_step method is invoked each game-tick and should not take more than
     # 2 seconds to run, otherwise the bot will timeout and cannot receive new
     # orders.
     # It is important to note that on_step is asynchronous - meaning practices
     # for asynchronous programming should be followed.
     async def on_step(self, iteration):
+        step_start_time = time.time()
         spending_queue = PriorityQueue()
         actions = []
         larvae = self.units(LARVA)
@@ -85,12 +86,29 @@ class MyBot(sc2.BotAI):
             else:
                 actions.append(larvae.random.train(unitId))
 
+        # INJECT
         actions.extend(await self.inject())
+
+        # SET RALLY POINTS
+        if math.floor(self.getTimeInSeconds()) % 10 == 0 and self.units(HATCHERY).not_ready.exists:
+            for hatch in self.units(HATCHERY).not_ready:
+                mineral_field = self.state.mineral_field.closest_to(hatch.position)
+                actions.append(hatch(AbilityId.RALLY_HATCHERY_WORKERS, mineral_field))
+
+        # REDISTRIBUTE WORKERS
+        for hatch in self.units(HATCHERY):
+            if hatch.surplus_harvesters > 4:
+                await self.distribute_workers()
+                break
 
         await self.do_actions(actions)
 
         if iteration == 0:
             await self.chat_send(f"Name: {self.NAME}")
+
+        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}')
+        execution_time = (time.time() - step_start_time) * 1000
+        print(f'{iteration} : {round(execution_time, 3)}ms')
 
     def need_supply(self, larvae) -> bool:
         return self.supply_left < 2 and not self.already_pending(OVERLORD) and self.can_afford(OVERLORD) and larvae.exists
@@ -102,10 +120,10 @@ class MyBot(sc2.BotAI):
         return self.units(DRONE).amount > (self.units(HATCHERY).amount * LARVA_RATE_PER_INJECT) and not self.already_pending(HATCHERY)
 
     def need_spawningpool(self) -> bool:
-        return not self.units(SPAWNINGPOOL).owned.exists
+        return not self.units(SPAWNINGPOOL).exists
 
     def need_queen(self) -> bool:
-        return self.units(SPAWNINGPOOL).owned.exists and (self.units(HATCHERY).amount > self.units(QUEEN).amount)
+        return self.units(SPAWNINGPOOL).exists and (self.units(HATCHERY).amount > self.units(QUEEN).amount)
 
     def get_resource_value(self, unitId: UnitTypeId) -> (int, int):
         if unitId == HATCHERY:
@@ -141,10 +159,9 @@ class MyBot(sc2.BotAI):
             actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.units(HATCHERY).first))
         return actions
 
-    # returns False if no placement could be found
     async def find_building_placement(self, unitId: UnitTypeId, main_pos) -> Point2 or bool:
         if unitId == HATCHERY:
-            return self.expansion_location_switch.getValue()
+            return await self.get_next_expansion()
         else:
             return await self.find_placement(unitId, near=main_pos)
     
@@ -158,3 +175,7 @@ class MyBot(sc2.BotAI):
                 best = distance
                 res = key
         return res
+
+    def getTimeInSeconds(self):
+        # returns real time if game is played on "faster"
+        return self.state.game_loop * 0.725 * (1/16)
