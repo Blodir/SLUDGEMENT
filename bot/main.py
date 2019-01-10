@@ -14,6 +14,7 @@ from sc2.units import Units
 from sc2.position import Point2
 
 from .priority_queue import PriorityQueue
+from .coroutine_switch import CoroutineSwitch
 
 LARVA = UnitTypeId.LARVA
 OVERLORD = UnitTypeId.OVERLORD
@@ -30,6 +31,10 @@ LARVA_RATE_PER_INJECT = 11.658
 class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
+
+    def __init__(self):
+        self.expansion_location_switch: CoroutineSwitch = CoroutineSwitch(self.next_expansion_location)
+        return super().__init__()
 
     # On_step method is invoked each game-tick and should not take more than
     # 2 seconds to run, otherwise the bot will timeout and cannot receive new
@@ -71,7 +76,8 @@ class MyBot(sc2.BotAI):
                     break
                 else:
                     structure_position = await self.find_building_placement(unitId, main_pos)
-                    actions.append(worker.build(unitId, structure_position))
+                    if structure_position:
+                        actions.append(worker.build(unitId, structure_position))
             elif self.is_built_from_building(unitId):
                 hatches = self.units(HATCHERY).ready.noqueue
                 if hatches.exists:
@@ -135,9 +141,10 @@ class MyBot(sc2.BotAI):
             actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.units(HATCHERY).first))
         return actions
 
-    async def find_building_placement(self, unitId: UnitTypeId, main_pos) -> Point2:
+    # returns False if no placement could be found
+    async def find_building_placement(self, unitId: UnitTypeId, main_pos) -> Point2 or bool:
         if unitId == HATCHERY:
-            return await self.next_expansion_location()
+            return self.expansion_location_switch.getValue()
         else:
             return await self.find_placement(unitId, near=main_pos)
     
