@@ -23,5 +23,19 @@ class PriorityQueue():
     def dequeue(self):
         return self.queue.pop(0)
 
+    def delete(self, element):
+        index = None
+        for idx, e in enumerate(self.queue):
+            if e[0] == element:
+                index = idx
+                break
+        if index != None:
+            del self.queue[index]
+
+    def reprioritize(self, element, priority):
+        self.delete(element)
+        if priority > 0:
+            self.enqueue(element, priority)
+
     def isEmpty(self):
         return len(self.queue) == 0

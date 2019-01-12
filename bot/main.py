@@ -29,13 +29,8 @@ class MyBot(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def on_start(self):
-        pass
+        self.spending_queue = SpendingQueue(self)
 
-    # On_step method is invoked each game-tick and should not take more than
-    # 2 seconds to run, otherwise the bot will timeout and cannot receive new
-    # orders.
-    # It is important to note that on_step is asynchronous - meaning practices
-    # for asynchronous programming should be followed.
     async def on_step(self, iteration):
         step_start_time = time.time()
 
@@ -51,14 +46,13 @@ class MyBot(sc2.BotAI):
         elif iteration in range(2, 10):
             return;
 
-        spending_queue = SpendingQueue(self)
         actions = []
 
         # UPDATE SPENDING QUEUE
-        spending_queue.iterate()
+        self.spending_queue.iterate()
 
         # SPEND RESOURCES
-        actions.extend(await self.create_spending_actions(spending_queue.get_spending_queue()))
+        actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
 
         # INJECT
         actions.extend(await self.inject())
@@ -123,10 +117,7 @@ class MyBot(sc2.BotAI):
                 #TODO: presend worker
                 pass
             # reduce resources_left whether we built the unit or not (ensure that we have more resources in the future)
-            print(p)
-            print(resources_left)
             resources_left = tuple_sub(resources_left, cost)
-            print(resources_left)
         for p in to_remove:
             # TODO: change logic to change priorities instead of removing stuff from queue in some cases?
             priorities.dequeue()
