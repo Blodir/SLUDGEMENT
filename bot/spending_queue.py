@@ -13,7 +13,7 @@ class SpendingQueue():
         return self.spending_queue
     
     def iterate(self):
-        larvae = self.units(LARVA)
+        larvae = self.bot.units(LARVA)
         if self.need_spawningpool():
             self.spending_queue.enqueue(SPAWNINGPOOL, 30)
 
