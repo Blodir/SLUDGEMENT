@@ -17,24 +17,19 @@ from sc2.position import Point2
 from sc2.unit_command import UnitCommand
 
 from .priority_queue import PriorityQueue
+from .spending_queue import SpendingQueue
 from .coroutine_switch import CoroutineSwitch
-
-LARVA = UnitTypeId.LARVA
-OVERLORD = UnitTypeId.OVERLORD
-DRONE = UnitTypeId.DRONE
-HATCHERY = UnitTypeId.HATCHERY
-SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
-QUEEN = UnitTypeId.QUEEN
-MINERAL_FIELD = UnitTypeId.MINERALFIELD
-
-# Larva per minute from an injected hatch
-LARVA_RATE_PER_INJECT = 11.658
+from .data import *
+from .util import *
 
 # Bots are created as classes and they need to have on_step method defined.
 # Do not change the name of the class!
 class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
+
+    def on_start(self):
+        pass
 
     # On_step method is invoked each game-tick and should not take more than
     # 2 seconds to run, otherwise the bot will timeout and cannot receive new
@@ -43,48 +38,27 @@ class MyBot(sc2.BotAI):
     # for asynchronous programming should be followed.
     async def on_step(self, iteration):
         step_start_time = time.time()
-        spending_queue = PriorityQueue()
+
+        # WARM UP for 10 iterations to avoid timeout
+        if iteration == 0:
+            await self.chat_send(f"Name: {self.NAME}")
+            await self.do(self.units(LARVA).random.train(DRONE))
+            return;
+        elif iteration == 1:
+            # warm up expansion location cache
+            self.expansion_locations
+            return;
+        elif iteration in range(2, 10):
+            return;
+
+        spending_queue = SpendingQueue(self)
         actions = []
-        larvae = self.units(LARVA)
-        allocated_resources = (0, 0)
 
-        if self.need_spawningpool():
-            spending_queue.enqueue(SPAWNINGPOOL, 30)
+        # UPDATE SPENDING QUEUE
+        spending_queue.iterate()
 
-        if self.need_hatchery():
-            spending_queue.enqueue(HATCHERY, 20)
-        
-        if self.need_supply(larvae):
-            spending_queue.enqueue(OVERLORD, 10)
-
-        if self.need_drone(larvae):
-            spending_queue.enqueue(DRONE, 5)
-
-        if self.need_queen():
-            spending_queue.enqueue(QUEEN, 21)
-        
-        # loop over the spending queue
-        # break the loop if at any point we have allocated more resources than currently available
-        while not spending_queue.isEmpty():
-            unitId: UnitTypeId = spending_queue.dequeue()[0]
-            allocated_resources = tuple(map(operator.add, allocated_resources, self.get_resource_value(unitId)))
-            if (allocated_resources[0] > self.minerals or allocated_resources[1] > self.vespene):
-                break
-            if self.is_structure(unitId):
-                main_pos = self.start_location
-                worker = self.select_build_worker(main_pos)
-                if worker is None:
-                    break
-                else:
-                    structure_position = await self.find_building_placement(unitId, main_pos)
-                    if structure_position:
-                        actions.append(worker.build(unitId, structure_position))
-            elif self.is_built_from_building(unitId):
-                hatches = self.units(HATCHERY).ready.noqueue
-                if hatches.exists:
-                    actions.append(hatches.first.train(unitId))
-            else:
-                actions.append(larvae.random.train(unitId))
+        # SPEND RESOURCES
+        actions.extend(await self.create_spending_actions(spending_queue.get_spending_queue()))
 
         # INJECT
         actions.extend(await self.inject())
@@ -101,52 +75,13 @@ class MyBot(sc2.BotAI):
                 await self.distribute_workers()
                 break
 
+        # EXECUTE ACTIONS
         await self.do_actions(actions)
 
-        if iteration == 0:
-            await self.chat_send(f"Name: {self.NAME}")
-
+        # PRINT TIME
         print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}')
         execution_time = (time.time() - step_start_time) * 1000
         print(f'{iteration} : {round(execution_time, 3)}ms')
-
-    def need_supply(self, larvae) -> bool:
-        return self.supply_left < 2 and not self.already_pending(OVERLORD) and self.can_afford(OVERLORD) and larvae.exists
-
-    def need_drone(self, larvae) -> bool:
-        return self.can_afford(DRONE) and larvae.exists
-
-    def need_hatchery(self) -> bool:
-        return self.units(DRONE).amount > (self.units(HATCHERY).amount * LARVA_RATE_PER_INJECT) and not self.already_pending(HATCHERY)
-
-    def need_spawningpool(self) -> bool:
-        return not self.units(SPAWNINGPOOL).exists
-
-    def need_queen(self) -> bool:
-        return self.units(SPAWNINGPOOL).exists and (self.units(HATCHERY).amount > self.units(QUEEN).amount)
-
-    def get_resource_value(self, unitId: UnitTypeId) -> (int, int):
-        if unitId == HATCHERY:
-            return (300, 0)
-        if unitId == DRONE:
-            return (50, 0)
-        if unitId == OVERLORD:
-            return (100, 0)
-        if unitId == QUEEN:
-            return (150, 0)
-        return (0, 0)
-    
-    def is_structure(self, unitId: UnitTypeId) -> bool:
-        if unitId == HATCHERY:
-            return True
-        if unitId == SPAWNINGPOOL:
-            return True
-        return False
-
-    def is_built_from_building(self, unitId: UnitTypeId) -> bool:
-        if unitId == QUEEN:
-            return True
-        return False
 
     async def inject(self):
         ready_queens = []
@@ -164,18 +99,57 @@ class MyBot(sc2.BotAI):
             return await self.get_next_expansion()
         else:
             return await self.find_placement(unitId, near=main_pos)
-    
-    async def next_expansion_location(self) -> Point2:
-        res: Point2 = self.start_location
-        best = math.inf
-        for idx, key in enumerate(self.expansion_locations):
-            distance = key.distance_to(self.start_location)
-            can_place = await self.can_place(HATCHERY, key)
-            if distance < best and can_place:
-                best = distance
-                res = key
-        return res
 
     def getTimeInSeconds(self):
         # returns real time if game is played on "faster"
         return self.state.game_loop * 0.725 * (1/16)
+
+#########################################################################################
+#########################################################################################
+    async def create_spending_actions(self, priorities: PriorityQueue):
+        # TODO: eventually take different stuff like mineral/vesp ratio to consideration
+        # eg. if building mutas and lings, you don't want to get stuck at 1k minerals and 0 vespene because mutas are higher priority
+        actions = []
+        to_remove = []
+        resources_left = (self.minerals, self.vespene)
+        for p in priorities:
+            cost = get_resource_value(p)
+            if resources_left[0] >= cost[0] and resources_left[1] >= cost[1]:
+                action = await self.create_construction_action(p)
+                if action != None:
+                    to_remove.append(p)
+                    actions.append(action)
+            else:
+                #TODO: presend worker
+                pass
+            # reduce resources_left whether we built the unit or not (ensure that we have more resources in the future)
+            print(p)
+            print(resources_left)
+            resources_left = tuple_sub(resources_left, cost)
+            print(resources_left)
+        for p in to_remove:
+            # TODO: change logic to change priorities instead of removing stuff from queue in some cases?
+            priorities.dequeue()
+        return actions;
+
+    # returns None if action could not be done
+    async def create_construction_action(self, unitId: UnitTypeId):
+        construction_type = built_by(unitId)
+        if construction_type == ConstructionType.BUILDING:
+            main_pos = self.start_location
+            worker = self.select_build_worker(main_pos)
+            if worker is None:
+                return None
+            else:
+                structure_position = await self.find_building_placement(unitId, main_pos)
+                if structure_position:
+                    return worker.build(unitId, structure_position)
+        elif construction_type == ConstructionType.FROM_BUILDING:
+            hatches = self.units(HATCHERY).ready.noqueue
+            if hatches.exists:
+                return hatches.first.train(unitId)
+        else:
+            larvae = self.units(LARVA)
+            if larvae.exists:
+                return self.units(LARVA).random.train(unitId)
+        return None

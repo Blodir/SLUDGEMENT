@@ -5,6 +5,10 @@ class PriorityQueue():
     def __str__(self):
         return self.queue.__str__()
 
+    def __iter__(self):
+        for priority in self.queue:
+            yield priority[0]
+
     def enqueue(self, element, priority):
         temp = self.queue.copy()
         if len(temp) == 0:
