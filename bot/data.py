@@ -8,10 +8,15 @@ DRONE = UnitTypeId.DRONE
 HATCHERY = UnitTypeId.HATCHERY
 SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
 QUEEN = UnitTypeId.QUEEN
+EXTRACTOR = UnitTypeId.EXTRACTOR
+
 MINERAL_FIELD = UnitTypeId.MINERALFIELD
+VESPENE_GEYSER = UnitTypeId.VESPENEGEYSER
+SPACEPLATFORMGEYSER = UnitTypeId.SPACEPLATFORMGEYSER
 
 # Larva per minute from an injected hatch
 LARVA_RATE_PER_INJECT = 11.658
+DRONE_MINERALS_PER_SECOND = 0.933
 
 class ConstructionType(enum.Enum):
     BUILDING = 0
@@ -19,7 +24,7 @@ class ConstructionType(enum.Enum):
     FROM_LARVA = 2
 
 def built_by(unitId: UnitTypeId) -> ConstructionType:
-    if unitId == HATCHERY or unitId == SPAWNINGPOOL:
+    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR:
         return ConstructionType.BUILDING
     if unitId == (QUEEN):
         return ConstructionType.FROM_BUILDING
@@ -36,4 +41,6 @@ def get_resource_value(unitId: UnitTypeId) -> (int, int):
         return (150, 0)
     if unitId == SPAWNINGPOOL:
         return (200, 0)
+    if unitId == EXTRACTOR:
+        return (75, 0)
     return (0, 0)

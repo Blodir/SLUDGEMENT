@@ -3,6 +3,8 @@ import operator
 import math
 import time
 import datetime
+
+from typing import Union
 from pathlib import Path
 
 import sc2
@@ -132,7 +134,13 @@ class MyBot(sc2.BotAI):
             if worker is None:
                 return None
             else:
-                structure_position = await self.find_building_placement(unitId, main_pos)
+                structure_position: Union(Point2, Unit)
+                if unitId == EXTRACTOR:
+                    for geyser in await self.get_own_geysers():
+                        if await self.can_place(EXTRACTOR, geyser.position):
+                            structure_position = geyser
+                else:
+                    structure_position = await self.find_building_placement(unitId, main_pos)
                 if structure_position:
                     return worker.build(unitId, structure_position)
         elif construction_type == ConstructionType.FROM_BUILDING:
@@ -144,3 +152,20 @@ class MyBot(sc2.BotAI):
             if larvae.exists:
                 return self.units(LARVA).random.train(unitId)
         return None
+
+    async def get_own_geysers(self):
+        geysers = []
+        for own_expansion in self.owned_expansions:
+            for expansion in self.expansion_locations:
+                if expansion == own_expansion:
+                    for unit in self.expansion_locations[expansion]:
+                        if unit.type_id == VESPENE_GEYSER or unit.type_id == SPACEPLATFORMGEYSER:
+                            geysers.append(unit)
+        return geysers
+    
+    # returns the amount of drones currently mining minerals
+    def get_mineral_saturation(self):
+        res = 0
+        for own_expansion in self.owned_expansions:
+            res += self.owned_expansions[own_expansion].assigned_harvesters
+        return res
