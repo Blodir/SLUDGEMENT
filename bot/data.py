@@ -1,6 +1,8 @@
 import enum
+from typing import Union
 
 from sc2.ids.unit_typeid import UnitTypeId
+from sc2.ids.upgrade_id import UpgradeId
 
 LARVA = UnitTypeId.LARVA
 OVERLORD = UnitTypeId.OVERLORD
@@ -10,9 +12,13 @@ SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
 QUEEN = UnitTypeId.QUEEN
 EXTRACTOR = UnitTypeId.EXTRACTOR
 
+LING = UnitTypeId.ZERGLING
+
 MINERAL_FIELD = UnitTypeId.MINERALFIELD
 VESPENE_GEYSER = UnitTypeId.VESPENEGEYSER
 SPACEPLATFORMGEYSER = UnitTypeId.SPACEPLATFORMGEYSER
+
+LINGSPEED = UpgradeId.ZERGLINGMOVEMENTSPEED
 
 # Larva per minute from an injected hatch
 LARVA_RATE_PER_INJECT = 11.658
@@ -26,21 +32,16 @@ class ConstructionType(enum.Enum):
 def built_by(unitId: UnitTypeId) -> ConstructionType:
     if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR:
         return ConstructionType.BUILDING
-    if unitId == (QUEEN):
+    if unitId == QUEEN or unitId == LINGSPEED:
         return ConstructionType.FROM_BUILDING
     return ConstructionType.FROM_LARVA
 
-def get_resource_value(unitId: UnitTypeId) -> (int, int):
-    if unitId == HATCHERY:
-        return (300, 0)
-    if unitId == DRONE:
-        return (50, 0)
-    if unitId == OVERLORD:
-        return (100, 0)
-    if unitId == QUEEN:
-        return (150, 0)
-    if unitId == SPAWNINGPOOL:
-        return (200, 0)
-    if unitId == EXTRACTOR:
-        return (75, 0)
-    return (0, 0)
+def get_construction_building(id) -> UnitTypeId:
+    if id == QUEEN:
+        return HATCHERY
+    if id == LINGSPEED:
+        return SPAWNINGPOOL
+    return None
+
+def is_townhall(id: UnitTypeId) -> bool:
+    return id == HATCHERY or id == UnitTypeId.NEXUS or id == UnitTypeId.COMMANDCENTER or id == UnitTypeId.ORBITALCOMMAND

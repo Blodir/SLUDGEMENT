@@ -24,6 +24,12 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
+            if self.bot.units(DRONE).amount > 51:
+                self.spending_queue.reprioritize(LING, 9)
+
+            if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
+                self.spending_queue.reprioritize(LINGSPEED, 31)
+
             if self.need_spawningpool():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
 
@@ -37,8 +43,8 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(QUEEN, 21)
 
     def need_supply(self) -> bool:
-        if self.supply_cap >= 200:
-            return false
+        if self.bot.supply_cap >= 200:
+            return False
         mineral_saturation = self.bot.get_mineral_saturation()
         mineral_income = mineral_saturation * DRONE_MINERALS_PER_SECOND
         overlords_in_progress = self.bot.already_pending(OVERLORD)
@@ -58,7 +64,8 @@ class SpendingQueue():
         return not self.bot.units(SPAWNINGPOOL).exists and not self.bot.already_pending(SPAWNINGPOOL)
 
     def need_queen(self) -> bool:
-        return self.bot.units(SPAWNINGPOOL).exists and (self.bot.units(HATCHERY).amount > self.bot.units(QUEEN).amount)
+        queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
+        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount > queen_count
     
     def update_hatchery_priority(self):
         if self.need_hatchery():
