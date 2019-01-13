@@ -79,6 +79,8 @@ class MyBot(sc2.BotAI):
             if hatch.surplus_harvesters > 4:
                 await self.distribute_workers()
                 break
+        if self.units(DRONE).idle.exists:
+            await self.distribute_workers()
         
         # MANAGE ARMY
         actions.extend(self.unit_manager.iterate())

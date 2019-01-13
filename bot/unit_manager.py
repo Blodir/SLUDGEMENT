@@ -21,6 +21,18 @@ class UnitManager():
             elif friendly_combat_value < 0.5 * enemy_combat_value:
                 if not self.one_of_targets_in_range(ling, enemies):
                     actions.append(ling.move(self.bot.start_location))
+        for expansion in self.bot.owned_expansions:
+            enemy_raid = enemies.closer_than(10, expansion)
+            if enemy_raid.exists:
+                raid_value = self.calculate_combat_value(enemy_raid)
+                defenders = self.bot.units.closer_than(15, expansion)
+                if raid_value > self.calculate_combat_value(defenders):
+                    for defender in defenders:
+                        actions.append(defender.move(self.bot.starting_location))
+                else:
+                    for defender in defenders:
+                        actions.append(defender.attack(expansion.position))
+
         return actions
     
     def calculate_combat_value(self, units: Units):
