@@ -11,10 +11,10 @@ class UnitManager():
 
     def iterate(self):
         actions = []
+        enemies = self.bot.known_enemy_units
+        enemy_combat_value = self.calculate_combat_value(enemies)
         for ling in self.bot.units(LING):
-            enemies = self.bot.known_enemy_units
             friendlies = self.bot.units.closer_than(15, ling)
-            enemy_combat_value = self.calculate_combat_value(enemies)
             friendly_combat_value = self.calculate_combat_value(friendlies)
             if friendly_combat_value > 1.2 * enemy_combat_value:
                 actions.append(ling.attack(self.bot.enemy_start_locations[0]))

@@ -23,6 +23,7 @@ from sc2.game_data import *
 from .priority_queue import PriorityQueue
 from .spending_queue import SpendingQueue
 from .unit_manager import UnitManager
+from .scouting_manager import ScoutingManager
 from .coroutine_switch import CoroutineSwitch
 from .data import *
 from .util import *
@@ -34,7 +35,8 @@ class MyBot(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def on_start(self):
-        self.spending_queue = SpendingQueue(self)
+        self.scouting_manager = ScoutingManager(self)
+        self.spending_queue = SpendingQueue(self, self.scouting_manager)
         self.unit_manager = UnitManager(self)
 
     def _prepare_first_step(self):
@@ -53,6 +55,9 @@ class MyBot(sc2.BotAI):
             await self.chat_send(f"Name: {self.NAME}")
 
         actions = []
+
+        # SCOUT
+        self.scouting_manager.iterate()
 
         # UPDATE SPENDING QUEUE
         self.spending_queue.iterate()

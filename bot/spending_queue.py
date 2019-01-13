@@ -3,10 +3,12 @@ from sc2 import BotAI
 
 from .data import *
 from .build_order import BuildOrder
+from .scouting_manager import ScoutingManager
 
 # TODO: Implement a buildorder
 class SpendingQueue():
-    def __init__(self, bot):
+    def __init__(self, bot, scouting_manager: ScoutingManager):
+        self.scouting_manager = scouting_manager
         self.spending_queue = PriorityQueue()
         self.bot = bot
         self.build = BuildOrder(bot)
@@ -24,7 +26,7 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
-            if self.bot.units(DRONE).amount > 51:
+            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count:
                 self.spending_queue.reprioritize(LING, 9)
 
             if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
@@ -55,7 +57,7 @@ class SpendingQueue():
         return time_until_supplyblock < overlord_buildtime
 
     def need_drone(self) -> bool:
-        return self.bot.can_afford(DRONE)
+        return self.bot.units(DRONE).amount < 80
 
     def need_hatchery(self) -> bool:
         return self.bot.units(DRONE).amount > (self.bot.units(HATCHERY).amount * LARVA_RATE_PER_INJECT) and not self.bot.already_pending(HATCHERY)
