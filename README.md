@@ -1,5 +1,5 @@
 # The Artificial Overmind Challenge by Reaktor starter kit
-
+antis !!!
 [Join the official Discord server for the competition!](https://discord.gg/D9XEhWY)
 
 ## Creating a repo for the competition
