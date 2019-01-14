@@ -28,7 +28,7 @@ class UnitManager():
                 defenders = self.bot.units.closer_than(15, expansion)
                 if raid_value > self.calculate_combat_value(defenders):
                     for defender in defenders:
-                        actions.append(defender.move(self.bot.starting_location))
+                        actions.append(defender.move(self.bot.start_location))
                 else:
                     for defender in defenders:
                         actions.append(defender.attack(expansion.position))

@@ -53,6 +53,8 @@ class SpendingQueue():
         mineral_cost = 50
         supply_cost = 1
         overlord_buildtime = 18
+        if mineral_income == 0:
+            mineral_income = 1
         time_until_supplyblock = (self.bot.supply_left + (overlords_in_progress * 8)) / (supply_cost / mineral_cost * mineral_income)
         return time_until_supplyblock < overlord_buildtime
 
