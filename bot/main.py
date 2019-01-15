@@ -35,14 +35,26 @@ class MyBot(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def on_start(self):
-        self.control_group_manager = ControlGroupManager()
+        self.control_group_manager = ControlGroupManager(self)
         self.scouting_manager = ScoutingManager(self)
         self.spending_queue = SpendingQueue(self, self.scouting_manager)
         self.unit_manager = UnitManager(self, self.control_group_manager, self.scouting_manager)
 
     def _prepare_first_step(self):
         self.expansion_locations
+        self.enemy_natural = self.calculate_enemy_natural()
         return super()._prepare_first_step()
+
+    async def on_unit_created(self, unit:Unit):
+        if unit.type_id == LING:
+            self.control_group_manager.get_group(2).add(unit)
+
+    async def on_unit_destroyed(self, unit_tag):
+        # TODO: remove destroyed unit from all control groups
+
+        # remove destroyed unit from scouted units
+        self.scouting_manager.remove_observation(unit_tag)
+        pass
 
     async def on_building_construction_complete(self, unit: Unit):
         if unit.type_id == EXTRACTOR:
@@ -51,11 +63,17 @@ class MyBot(sc2.BotAI):
     async def on_step(self, iteration):
         step_start_time = time.time()
 
-        # WARM UP for 10 iterations to avoid timeout
-        if iteration == 0:
-            await self.chat_send(f"Name: {self.NAME}")
-
         actions = []
+
+        if iteration == 0:
+            mins = []
+            for unit in self.expansion_locations[self.start_location]:
+                if unit.mineral_contents > 0:
+                    mins.append(unit)
+            self.main_minerals = Units(mins, self._game_data)
+
+            actions.append(self.units(OVERLORD).first.move(self.enemy_natural))
+            await self.chat_send(f"Name: {self.NAME}")
 
         # SCOUT
         self.scouting_manager.iterate()
@@ -93,6 +111,9 @@ class MyBot(sc2.BotAI):
         print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}')
         execution_time = (time.time() - step_start_time) * 1000
         print(f'{iteration} : {round(execution_time, 3)}ms')
+
+        print(f"Enemy army value: {self.scouting_manager.estimated_enemy_army_value}")
+        print(f"Own army value: {self.scouting_manager.own_army_value}")
 
     async def inject(self):
         ready_queens = []
@@ -223,3 +244,14 @@ class MyBot(sc2.BotAI):
             vespene = resources[1]
             value += (minerals + vespene)
         return value
+
+    def calculate_enemy_natural(self) -> Point2:
+        enemy_base = self.enemy_start_locations[0]
+        best = None
+        distance = math.inf
+        for expansion in self.expansion_locations:
+            temp = expansion.distance2_to(enemy_base)
+            if temp < distance and temp > 0:
+                distance = temp
+                best = expansion
+        return best

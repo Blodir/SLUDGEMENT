@@ -5,6 +5,7 @@ from sc2.player import Bot, Computer
 
 from bot import MyBot
 from examples.zerg.zerg_rush import ZergRushBot
+from examples.worker_rush import WorkerRushBot
 
 def main():
     with open("botinfo.json") as f:
@@ -14,7 +15,7 @@ def main():
 
     run_game(maps.get("Catalyst LE"), [
         Bot(race, MyBot()),
-        Bot(Race.Zerg, ZergRushBot())
+        Bot(Race.Zerg, WorkerRushBot())
     ], realtime=False, step_time_limit=2.0, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
 
 if __name__ == '__main__':

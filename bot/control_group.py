@@ -8,7 +8,7 @@ from sc2.ids.ability_id import AbilityId
 from sc2.position import Point2
 
 class ControlGroup():
-    def __init__(self, units):
+    def __init__(self, units: Units):
         self.units: Units = units
 
     def get_center_position(self):
@@ -18,8 +18,9 @@ class ControlGroup():
             x += unit.position.x
             y += unit.position.y
         amount = self.units.amount
-        x = x / amount
-        y = y / amount
+        if amount != 0:
+            x = x / amount
+            y = y / amount
         return Point2((x, y))
     
     def command(self, ability: AbilityId, target: Unit, queue = False) -> List[UnitCommand]:
@@ -29,7 +30,14 @@ class ControlGroup():
         return res
     
     def add(self, units: Union[Units, Unit]):
-        self.units.__iadd(units)
+        if isinstance(units, Unit):
+            self.units.append(units)
+        else:
+            self.units.extend(units)
+
+    def merge_to(self, target):
+        # TODO
+        pass
     
     def remove(self, units: Union[Units, Unit]):
         # TODO
