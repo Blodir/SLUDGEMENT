@@ -215,7 +215,7 @@ class MyBot(sc2.BotAI):
     def calculate_combat_value(self, units: Units):
         value = 0
         for unit in units.filter(lambda u: u.can_attack_ground):
-            if unit.type_id == DRONE:
+            if unit.type_id == DRONE or unit.type_id == UnitTypeId.PROBE or unit.type_id == UnitTypeId.SCV:
                 resources = (10, 0)
             else:
                 resources = self.get_resource_value(unit.type_id)
