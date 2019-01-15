@@ -41,7 +41,7 @@ class UnitManager():
         
         # decide if individual unit should engage or disengage
         for ling in self.bot.units(LING):
-            enemies = self.bot.known_enemy_units.closer_than(15, ling)
+            enemies = self.scouting_manager.observed_enemy_units.closer_than(15, ling)
             enemy_combat_value = self.bot.calculate_combat_value(enemies)
             friendlies = self.bot.units.closer_than(15, ling)
             friendly_combat_value = self.bot.calculate_combat_value(friendlies)
