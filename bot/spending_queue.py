@@ -2,6 +2,7 @@ from .priority_queue import PriorityQueue
 from sc2 import BotAI
 
 from .data import *
+from .util import *
 from .build_order import BuildOrder
 from .scouting_manager import ScoutingManager
 
@@ -26,8 +27,9 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
-            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count:
-                self.spending_queue.reprioritize(LING, 9)
+            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value - self.bot.calculate_combat_value(self.bot.units(DRONE)):
+                self.spending_queue.reprioritize(LING, 39)
+                self.spending_queue.reprioritize(QUEEN, 38)
 
             if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
                 self.spending_queue.reprioritize(LINGSPEED, 31)
@@ -36,7 +38,7 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
 
             if self.need_supply():
-                self.spending_queue.reprioritize(OVERLORD, 10)
+                self.spending_queue.reprioritize(OVERLORD, 40)
 
             if self.need_drone():
                 self.spending_queue.reprioritize(DRONE, 5)

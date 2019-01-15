@@ -24,7 +24,7 @@ from .priority_queue import PriorityQueue
 from .spending_queue import SpendingQueue
 from .unit_manager import UnitManager
 from .scouting_manager import ScoutingManager
-from .coroutine_switch import CoroutineSwitch
+from .control_group_manager import ControlGroupManager
 from .data import *
 from .util import *
 
@@ -35,9 +35,10 @@ class MyBot(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def on_start(self):
+        self.control_group_manager = ControlGroupManager()
         self.scouting_manager = ScoutingManager(self)
         self.spending_queue = SpendingQueue(self, self.scouting_manager)
-        self.unit_manager = UnitManager(self)
+        self.unit_manager = UnitManager(self, self.control_group_manager, self.scouting_manager)
 
     def _prepare_first_step(self):
         self.expansion_locations
@@ -211,3 +212,14 @@ class MyBot(sc2.BotAI):
         unitData: UnitTypeData = self._game_data.units[id.value]
         return (unitData.cost.minerals, unitData.cost.vespene)
     
+    def calculate_combat_value(self, units: Units):
+        value = 0
+        for unit in units.filter(lambda u: u.can_attack_ground):
+            if unit.type_id == DRONE:
+                resources = (10, 0)
+            else:
+                resources = self.get_resource_value(unit.type_id)
+            minerals = resources[0]
+            vespene = resources[1]
+            value += (minerals + vespene)
+        return value
