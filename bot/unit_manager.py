@@ -42,7 +42,7 @@ class UnitManager():
                 to_remove.extend(nearby_units.tags)
         remaining_units = remaining_units.tags_not_in(set(to_remove))
         for unit_group in groups:
-            enemies = observed_enemy_units.closer_than(20, unit_group.center)
+            enemies = observed_enemy_units.filter(lambda u: u.can_attack_ground).closer_than(20, unit_group.center)
             own_value = self.bot.calculate_combat_value(unit_group)
             center: Point2 = unit_group.center
             if enemies.exists:
