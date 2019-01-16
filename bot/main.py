@@ -16,7 +16,7 @@ from sc2.ids.effect_id import EffectId
 from sc2.ids.upgrade_id import UpgradeId
 from sc2.unit import Unit
 from sc2.units import Units
-from sc2.position import Point2
+from sc2.position import Point2, Point3
 from sc2.unit_command import UnitCommand
 from sc2.game_data import *
 
@@ -46,8 +46,9 @@ class MyBot(sc2.BotAI):
         return super()._prepare_first_step()
 
     async def on_unit_created(self, unit:Unit):
-        if unit.type_id == LING:
-            self.control_group_manager.get_group(2).add(unit)
+        # if unit.type_id == LING:
+        #    self.control_group_manager.get_group(2).add(unit)
+        pass
 
     async def on_unit_destroyed(self, unit_tag):
         # TODO: remove destroyed unit from all control groups
@@ -107,13 +108,15 @@ class MyBot(sc2.BotAI):
         # EXECUTE ACTIONS
         await self.do_actions(actions)
 
+        # SEND DEBUG
+        # self._client.debug_text_simple(f"Own army value: {self.scouting_manager.own_army_value}")
+        # self._client.debug_text_simple(f"Enemy army value: {self.scouting_manager.estimated_enemy_army_value}")
+        await self._client.send_debug()
+
         # PRINT TIME
         print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}')
         execution_time = (time.time() - step_start_time) * 1000
         print(f'{iteration} : {round(execution_time, 3)}ms')
-
-        print(f"Enemy army value: {self.scouting_manager.estimated_enemy_army_value}")
-        print(f"Own army value: {self.scouting_manager.own_army_value}")
 
     async def inject(self):
         ready_queens = []
@@ -126,11 +129,13 @@ class MyBot(sc2.BotAI):
             actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.units(HATCHERY).first))
         return actions
 
-    async def find_building_placement(self, unitId: UnitTypeId, main_pos) -> Point2 or bool:
+    async def find_building_placement(self, unitId: UnitTypeId) -> Point2 or bool:
         if unitId == HATCHERY:
             return await self.get_next_expansion()
         else:
-            return await self.find_placement(unitId, near=main_pos)
+            # find placement on opposite side of mineral line
+            pos = self.start_location + (5 * self.main_minerals.center.direction_vector(self.start_location))
+            return await self.find_placement(unitId, near=pos)
 
     def getTimeInSeconds(self):
         # returns real time if game is played on "faster"
@@ -170,8 +175,7 @@ class MyBot(sc2.BotAI):
     async def create_construction_action(self, id: UnitTypeId):
         construction_type = built_by(id)
         if construction_type == ConstructionType.BUILDING:
-            main_pos = self.start_location
-            worker = self.select_build_worker(main_pos)
+            worker = self.select_build_worker(self.start_location)
             if worker is None:
                 return None
             else:
@@ -181,7 +185,7 @@ class MyBot(sc2.BotAI):
                         if await self.can_place(EXTRACTOR, geyser.position):
                             structure_position = geyser
                 else:
-                    structure_position = await self.find_building_placement(id, main_pos)
+                    structure_position = await self.find_building_placement(id)
                 if structure_position:
                     return worker.build(id, structure_position)
         elif construction_type == ConstructionType.FROM_BUILDING:

@@ -3,6 +3,7 @@ from typing import List
 from sc2 import BotAI
 from sc2.units import Units
 from sc2.unit import Unit
+from sc2.position import Point3
 
 from .unit_observation import UnitObservation
 from .data import *
@@ -18,14 +19,18 @@ class ScoutingManager():
     
     def iterate(self):
         # Update unit observations based on known enemy units
+        ttl = 90
         for unit in self.bot.known_enemy_units:
             updated = False
             for observation in self.unit_observations:
                 if observation.unit.tag == unit.tag:
-                    observation.update_ttl(50)
+                    observation.update_unit(unit)
+                    observation.update_ttl(ttl)
                     updated = True
+                    pos = unit.position
+                    self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
             if not updated:
-                self.unit_observations.append(UnitObservation(unit, 50))
+                self.unit_observations.append(UnitObservation(unit, ttl))
 
         # Update observed_enemy_units then remove old observations
         temp: List[Unit] = []
@@ -38,7 +43,7 @@ class ScoutingManager():
             self.unit_observations.remove(observation)
         
         self.observed_enemy_units: Units = Units(temp, self.bot._game_data)
-        
+
         # Count enemy townhalls
         temp_basecount = 1
         for struct in self.bot.known_enemy_structures:

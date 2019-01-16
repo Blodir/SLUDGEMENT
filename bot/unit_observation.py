@@ -13,3 +13,6 @@ class UnitObservation():
 
     def update_ttl(self, time_to_live: int):
         self.time_to_live = time_to_live
+    
+    def update_unit(self, unit: Unit):
+        self.unit = unit
