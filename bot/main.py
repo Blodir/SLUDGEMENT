@@ -103,7 +103,7 @@ class MyBot(sc2.BotAI):
             await self.distribute_workers()
         
         # MANAGE ARMY
-        actions.extend(self.unit_manager.iterate())
+        actions.extend(self.unit_manager.iterate(iteration))
 
         # EXECUTE ACTIONS
         await self.do_actions(actions)
