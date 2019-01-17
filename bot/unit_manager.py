@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from sc2 import BotAI
 from sc2.units import Units
@@ -24,23 +24,116 @@ class UnitManager():
     def iterate(self):
         actions: List[UnitCommand] = []
 
-        observed_enemy_units = self.scouting_manager.observed_enemy_units
+        all_army: Units = self.bot.units.exclude_type({OVERLORD, DRONE, QUEEN, LARVA, EGG}).not_structure.ready
+        observed_enemy_army = self.scouting_manager.observed_enemy_units.not_structure
+        estimated_enemy_value = self.scouting_manager.estimated_enemy_army_value
+
+        enemy_raiders = self.get_enemy_raiders()
+
+        army_units_wo_orders = all_army
+
+        unselectable = Units([], self.bot._game_data)
 
         # ARMY MANAGEMENT
 
-        all_army: Units = self.bot.units.exclude_type({OVERLORD, DRONE, QUEEN, LARVA, EGG}).not_structure.ready
-        remaining_units = all_army
-        groups = []
+        groups: List[Units] = self.group_army(army_units_wo_orders)
 
+        for group in groups:
+            nearby_enemies = None
+            if observed_enemy_army.exists:
+                closest_enemy = observed_enemy_army.closest_to(group.center)
+                if closest_enemy.distance_to(group.center) < 15:
+                    nearby_enemies: Units = observed_enemy_army.closer_than(15, closest_enemy)
+                    enemy_value = self.bot.calculate_combat_value(nearby_enemies)
+            group_value = self.bot.calculate_combat_value(group)
+            group_center = group.center
+
+            if nearby_enemies and nearby_enemies.exists:
+                print(enemy_value)
+                if group_value > enemy_value:
+                    # attack enemy group
+                    actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
+                    self.bot._client.debug_text_world(f'attacking group', Point3((group_center.x, group_center.y, 10)), None, 12)
+                else:
+                    # retreat somewhwere
+                    move_position = self.bot.start_location
+                    if group.center.distance_to(move_position) < 5:
+                        actions.extend(self.command_group(group, AbilityId.ATTACK, move_position))
+                        self.bot._client.debug_text_world(f'attacking', Point3((group_center.x, group_center.y, 10)), None, 12)
+                    else:
+                        actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
+                        self.bot._client.debug_text_world(f'retreating', Point3((group_center.x, group_center.y, 10)), None, 12)
+            else:
+                # do other stuff
+                if group_value > 1.2 * estimated_enemy_value:
+                    enemy_start_location = self.bot.enemy_start_locations[0]
+                    actions.extend(self.command_group(group, AbilityId.ATTACK, enemy_start_location))
+                    self.bot._client.debug_text_world(f'attacking base', Point3((group_center.x, group_center.y, 10)), None, 12)
+                else:
+                    # merge
+                    other_units: Units = all_army.tags_not_in(group.tags)
+                    if other_units.exists:
+                        closest_other_unit: Unit = other_units.closest_to(group_center)
+                        actions.extend(self.command_group(group, AbilityId.MOVE, closest_other_unit.position))
+                        self.bot._client.debug_text_world(f'merging', Point3((group_center.x, group_center.y, 10)), None, 12)
+                    else:
+                        self.bot._client.debug_text_world(f'idle', Point3((group_center.x, group_center.y, 10)), None, 12)
+
+        # QUEENS AND DRONES
+        for expansion in self.bot.owned_expansions:
+            enemy_raid = observed_enemy_army.closer_than(20, expansion)
+            if enemy_raid.exists:
+                raid_value = self.bot.calculate_combat_value(enemy_raid)
+                defending_army: Units = all_army.closer_than(15, expansion)
+                if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
+                    for defender in self.bot.units.closer_than(15, expansion):
+                        pos = defender.position
+                        if expansion != self.bot.start_location:
+                            if defender.type_id == DRONE:
+                                self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
+                                actions.append(defender.gather(self.bot.main_minerals.random))
+                            elif defender.type_id == QUEEN:
+                                self.bot._client.debug_text_world(f'attacking', Point3((pos.x, pos.y, 10)), None, 12)
+                                actions.append(defender.attack(expansion.position))
+                        else:
+                            # counter worker rush
+                            if enemy_raid.closer_than(5, defender.position).exists:
+                                self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
+                                actions.append(defender.attack(expansion.position))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        '''
         to_remove = []
-        for unit in remaining_units:
+        for unit in army_units_wo_orders:
             if unit.tag in to_remove:
                 continue
-            nearby_units = remaining_units.closer_than(5, unit.position)
+            nearby_units = army_units_wo_orders.closer_than(5, unit.position)
             if nearby_units.exists:
                 groups.append(nearby_units)
                 to_remove.extend(nearby_units.tags)
-        remaining_units = remaining_units.tags_not_in(set(to_remove))
+        army_units_wo_orders = army_units_wo_orders.tags_not_in(set(to_remove))
         for unit_group in groups:
             enemies = observed_enemy_units.filter(lambda u: u.can_attack_ground).closer_than(20, unit_group.center)
             own_value = self.bot.calculate_combat_value(unit_group)
@@ -98,56 +191,7 @@ class UnitManager():
                             # counter worker rush
                             self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
                             actions.append(defender.attack(expansion.position))
-
-
-        # decide if control group should engage or disengage
-        """         for group in self.control_group_manager.get_groups():
-            enemies = enemy_units.closer_than(15, group.get_center_position())
-            if not enemies.exists:
-                continue
-            friendlies = group.get().ready
-            enemy_combat_value = self.bot.calculate_combat_value(enemies)
-            friendly_combat_value = self.bot.calculate_combat_value(friendlies)
-            if friendly_combat_value > 1.2 * enemy_combat_value:
-                self.addActionsNoDuplicates(group.command(AbilityId.ATTACK, enemies.random), actions)
-            elif friendly_combat_value < 0.8 * enemy_combat_value:
-                self.addActionsNoDuplicates(group.command(AbilityId.MOVE, self.bot.start_location), actions) """
-        #
         '''
-        # decide if individual unit should engage or disengage
-        for ling in self.bot.units(LING):
-            enemies = self.scouting_manager.observed_enemy_units.closer_than(15, ling)
-            enemy_combat_value = self.bot.calculate_combat_value(enemies)
-            friendlies = self.bot.units.closer_than(15, ling)
-            friendly_combat_value = self.bot.calculate_combat_value(friendlies)
-            if friendly_combat_value > 1.2 * enemy_combat_value:
-                actions.append(ling.attack(self.bot.enemy_start_locations[0]))
-            elif friendly_combat_value < 0.5 * enemy_combat_value:
-                #if not self.one_of_targets_in_range(ling, enemies):
-                actions.append(ling.move(self.bot.start_location))
-
-        for expansion in self.bot.owned_expansions:
-            enemy_raid = enemy_units.closer_than(20, expansion)
-            if enemy_raid.exists:
-                # self.addActionsNoDuplicates(self.control_group_manager.get_group(2).command(AbilityId.ATTACK, expansion), actions)
-                raid_value = self.bot.calculate_combat_value(enemy_raid)
-                defenders = self.bot.units.closer_than(15, expansion).ready
-                if raid_value > self.bot.calculate_combat_value(defenders.filter(lambda u: u.type_id != DRONE)):
-                    for defender in defenders:
-                        if expansion != self.bot.start_location:
-                            if defender.type_id == DRONE:
-                                self.addActionsNoDuplicates(defender.gather(self.bot.main_minerals.random), actions)
-                            else:
-                                self.addActionsNoDuplicates(defender.move(self.bot.start_location), actions)
-                        else:
-                            # counter worker rush
-                            self.addActionsNoDuplicates(defender.attack(expansion.position), actions)
-                else:
-                    for defender in defenders:
-                        if defender.type_id != DRONE:
-                            self.addActionsNoDuplicates(defender.attack(expansion.position), actions)
-        '''
-
         return actions
 
     def one_of_targets_in_range(self, unit: Unit, targets: Units):
@@ -156,16 +200,41 @@ class UnitManager():
                 return True
         return False
     
-    # FIXME: Super slow algorithm for making sure an unit is only given one action
-    def addActionsNoDuplicates(self, commands: Union[UnitCommand, List[UnitCommand]], actions: List[UnitCommand]):
-        actions_to_add = []
-        if isinstance(commands, List):
-            for cmd in commands:
-                for action in actions:
-                    if cmd.unit.tag == action.unit.tag:
-                        break
-                    else:
-                        actions_to_add.append(action)
-        else:
-            actions_to_add.append(commands)
-        actions.extend(actions_to_add)
+    def get_enemy_raiders(self):
+        output = {}
+        for exp_position in self.bot.owned_expansions:
+            enemies = self.bot.known_enemy_units.closer_than(15, exp_position)
+            output[exp_position] = enemies
+        return output
+    
+    def group_army(self, army: Units) -> List[Units]:
+        groups: List[Units] = []
+        already_grouped_tags = []
+
+        for unit in army:
+            if unit.tag in already_grouped_tags:
+                continue
+            # TODO: fix recursive grouping
+            # neighbors: Units = self.find_neighbors(unit, army.tags_not_in(set(already_grouped_tags)))
+            neighbors: Units = army.closer_than(5, unit.position)
+            groups.append(neighbors)
+            already_grouped_tags.extend(neighbors.tags)
+        
+        return groups
+                
+    def find_neighbors(self, THE_SOURCE: Unit, units: Units) -> Units:
+        neighbors: Units = units.closer_than(3, THE_SOURCE.position)
+
+        temp: Units = Units([], self.bot._game_data)
+        for individual in neighbors:
+            temp.__or__(self.find_neighbors(individual, units.tags_not_in(neighbors.tags)))
+        output = neighbors.__or__(temp)
+        if output is None:
+            return Units([], self.bot._game_data)
+        return neighbors.__or__(temp)
+
+    def command_group(self, units: Units, command: UnitCommand, target: Union[Unit, Point2]):
+        commands = []
+        for unit in units:
+            commands.append(unit(command, target))
+        return commands
