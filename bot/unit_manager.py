@@ -26,7 +26,7 @@ class UnitManager():
         actions: List[UnitCommand] = []
 
         all_army: Units = self.bot.units.exclude_type({OVERLORD, DRONE, QUEEN, LARVA, EGG}).not_structure.ready
-        observed_enemy_army = self.scouting_manager.observed_enemy_units.not_structure
+        observed_enemy_army = self.scouting_manager.observed_enemy_units.not_structure.exclude_type({OVERLORD})
         estimated_enemy_value = self.scouting_manager.estimated_enemy_army_value
 
         enemy_raiders = self.get_enemy_raiders()
