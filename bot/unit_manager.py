@@ -34,6 +34,11 @@ class UnitManager():
 
         unselectable = Units([], self.bot._game_data)
 
+        for observed_enemy in observed_enemy_army:
+            print(observed_enemy.position)
+            pos = observed_enemy.position
+            self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
+
         # ARMY MANAGEMENT
 
         groups: List[Units] = self.group_army(army_units_wo_orders)

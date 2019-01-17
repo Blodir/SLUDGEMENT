@@ -27,8 +27,6 @@ class ScoutingManager():
                     observation.update_unit(unit)
                     observation.update_ttl(ttl)
                     updated = True
-            pos = unit.position
-            self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
             if not updated:
                 self.unit_observations.append(UnitObservation(unit, ttl))
 
