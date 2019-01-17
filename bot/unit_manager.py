@@ -21,8 +21,11 @@ class UnitManager():
         self.control_group_manager = control_group_manager
         self.scouting_manager = scouting_manager
         self.unselectable = Units([], self.bot._game_data)
+        self.scouting_ttl = 300
 
     def iterate(self, iteration):
+        self.scouting_ttl -= 1
+
         actions: List[UnitCommand] = []
 
         all_army: Units = self.bot.units.exclude_type({OVERLORD, DRONE, QUEEN, LARVA, EGG}).not_structure.ready
@@ -30,6 +33,9 @@ class UnitManager():
         estimated_enemy_value = self.scouting_manager.estimated_enemy_army_value
 
         enemy_raiders = self.get_enemy_raiders()
+        enemy_raiders_value = 0
+        for base_position in enemy_raiders:
+            enemy_raiders_value += self.bot.calculate_combat_value(enemy_raiders[base_position])
 
         army_units = all_army
 
@@ -39,8 +45,11 @@ class UnitManager():
 
         # ARMY MANAGEMENT
 
-        if iteration % 300 == 0 and self.unselectable.amount == 0:
-            if army_units(LING).exists:
+        print(self.scouting_ttl, self.unselectable.amount, enemy_raiders_value)
+        if self.unselectable.amount == 0:
+            if army_units(LING).exists and self.scouting_ttl < 0 and enemy_raiders_value == 0:
+                print('scouting')
+                self.scouting_ttl = 300
                 unit: Unit = army_units(LING).random
                 scouting_order: List[Point2] = []
                 keys: List[Point2] = list(self.bot.expansion_locations.keys())
@@ -74,7 +83,7 @@ class UnitManager():
                 else:
                     # retreat somewhwere
                     move_position = self.bot.start_location
-                    if group.center.distance_to(move_position) < 5:
+                    if group.center.distance_to(move_position) < 3:
                         actions.extend(self.command_group(group, AbilityId.ATTACK, move_position))
                         self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:

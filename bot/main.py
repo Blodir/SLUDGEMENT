@@ -114,9 +114,8 @@ class MyBot(sc2.BotAI):
         await self._client.send_debug()
 
         # PRINT TIME
-        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}')
         execution_time = (time.time() - step_start_time) * 1000
-        print(f'{iteration} : {round(execution_time, 3)}ms')
+        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}')
 
     async def inject(self):
         ready_queens = []
