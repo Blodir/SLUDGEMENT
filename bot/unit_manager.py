@@ -93,7 +93,7 @@ class UnitManager():
                     # retreat somewhwere
                     move_position = self.bot.main_minerals.center
                     if group.center.distance_to(move_position) < 5:
-                        actions.extend(self.command_group(group, AbilityId.ATTACK, move_position))
+                        actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
                         self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
                         actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
