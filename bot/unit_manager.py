@@ -90,11 +90,11 @@ class UnitManager():
             else:
                 if group_value > 1.2 * estimated_enemy_value:
                     # attack toward closest enemy buildings
+                    attack_position = self.bot.enemy_start_locations[0]
                     if self.scouting_manager.observed_enemy_units.exists:
                         target_enemy_units: Units = self.scouting_manager.observed_enemy_units.exclude_type(OVERLORD)
-                        attack_position = target_enemy_units.closest_to(group.center).position
-                    else:
-                        attack_position = self.bot.enemy_start_locations[0]
+                        if target_enemy_units.exists:
+                            attack_position = target_enemy_units.closest_to(group.center).position
                     actions.extend(self.command_group(group, AbilityId.ATTACK, attack_position))
                     self.bot._client.debug_text_world(f'attacking base', Point3((group.center.x, group.center.y, 10)), None, 12)
                 else:
