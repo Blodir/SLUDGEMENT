@@ -35,7 +35,8 @@ class ScoutingManager():
         to_remove = []
         for observation in self.unit_observations:
             temp.append(observation.unit)
-            if not observation.iterate():
+            if not observation.iterate() or (not observation.unit.is_visible and self.bot.units.closer_than(7, observation.unit).exists):
+                # forget unit if observation has expired or there's a friendly unit in vision range but the enemy unit can't be seen
                 to_remove.append(observation)
         for observation in to_remove:
             self.unit_observations.remove(observation)

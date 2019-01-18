@@ -74,7 +74,7 @@ class UnitManager():
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
-                if group_value > enemy_value:
+                if group_value + self.bot.calculate_combat_value(self.bot.units(QUEEN).closer_than(7, group.center)) > enemy_value:
                     # attack enemy group
                     actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
                     self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
@@ -90,8 +90,9 @@ class UnitManager():
             else:
                 if group_value > 1.2 * estimated_enemy_value:
                     # attack toward closest enemy buildings
-                    if self.bot.known_enemy_units.exists:
-                        attack_position = self.bot.known_enemy_units.closest_to(group.center).position
+                    if self.scouting_manager.observed_enemy_units.exists:
+                        target_enemy_units: Units = self.scouting_manager.observed_enemy_units.exclude_type(OVERLORD)
+                        attack_position = target_enemy_units.closest_to(group.center).position
                     else:
                         attack_position = self.bot.enemy_start_locations[0]
                     actions.extend(self.command_group(group, AbilityId.ATTACK, attack_position))

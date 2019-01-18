@@ -28,7 +28,7 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             # Make army or drones ?
-            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value:
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value:
                 self.spending_queue.reprioritize(ARMY, 39)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
