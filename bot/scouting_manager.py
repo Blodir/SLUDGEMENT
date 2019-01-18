@@ -43,9 +43,10 @@ class ScoutingManager():
         self.observed_enemy_units: Units = Units(temp, self.bot._game_data)
 
         # Count enemy townhalls
+        # TODO: scout main base
         temp_basecount = 1
         for struct in self.bot.known_enemy_structures:
-            if is_townhall(struct.type_id) and not struct.position in self.bot.enemy_start_locations:
+            if is_townhall(struct.type_id) and not struct.position in self.bot.enemy_start_locations and struct.position in self.bot.expansion_locations:
                 temp_basecount += 1
         self.enemy_townhall_count = temp_basecount
 

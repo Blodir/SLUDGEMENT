@@ -4,6 +4,8 @@ from typing import Union
 from sc2.ids.unit_typeid import UnitTypeId
 from sc2.ids.upgrade_id import UpgradeId
 
+ARMY = 9999
+
 EGG = UnitTypeId.EGG
 LARVA = UnitTypeId.LARVA
 

@@ -55,6 +55,8 @@ class MyBot(sc2.BotAI):
 
         # remove destroyed unit from scouted units
         self.scouting_manager.remove_observation(unit_tag)
+        if self.unit_manager.unselectable.tags_in({unit_tag}).exists:
+            self.unit_manager.unselectable = self.unit_manager.unselectable.tags_not_in({unit_tag})
         pass
 
     async def on_building_construction_complete(self, unit: Unit):
@@ -115,7 +117,7 @@ class MyBot(sc2.BotAI):
 
         # PRINT TIME
         execution_time = (time.time() - step_start_time) * 1000
-        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}')
+        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}ms')
 
     async def inject(self):
         ready_queens = []
@@ -132,8 +134,12 @@ class MyBot(sc2.BotAI):
         if unitId == HATCHERY:
             return await self.get_next_expansion()
         else:
-            # find placement on opposite side of mineral line
-            pos = self.start_location + (5 * self.main_minerals.center.direction_vector(self.start_location))
+            if unitId == SPAWNINGPOOL:
+                # find placement behind mineral line
+                pos = self.start_location + (-5 * self.main_minerals.center.direction_vector(self.start_location))
+            else:
+                # find placement opposite side of hatch from mineral line
+                pos = self.start_location + (5 * self.main_minerals.center.direction_vector(self.start_location))
             return await self.find_placement(unitId, near=pos)
 
     def getTimeInSeconds(self):
@@ -149,22 +155,42 @@ class MyBot(sc2.BotAI):
         to_remove = []
         minerals_left = self.minerals
         vespene_left = self.vespene
+        larvae = self.units(LARVA)
         for p in priorities:
-            cost = self.get_resource_value(p)
             if minerals_left < 0:
                 minerals_left = 0
             if vespene_left < 0:
                 vespene_left = 0
-            if minerals_left >= cost[0] and vespene_left >= cost[1]:
-                action = await self.create_construction_action(p)
-                if action != None:
-                    to_remove.append(p)
-                    actions.append(action)
+            if p == ARMY:
+                # make army until no larva remaining
+                cost = self.get_resource_value(LING)
+                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae.exists:
+                    action = await self.create_construction_action(LING)
+                    if action != None:
+                        actions.append(action)
+                    minerals_left -= cost[0]
+                    vespene_left -= cost[1]
+            elif p == DRONE:
+                # make drone until no larva remaining
+                cost = self.get_resource_value(DRONE)
+                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae.exists:
+                    action = await self.create_construction_action(DRONE)
+                    if action != None:
+                        actions.append(action)
+                    minerals_left -= cost[0]
+                    vespene_left -= cost[1]
             else:
-                #TODO: presend worker
-                pass
-            minerals_left -= cost[0]
-            vespene_left -= cost[1]
+                cost = self.get_resource_value(p)
+                if minerals_left >= cost[0] and vespene_left >= cost[1]:
+                    action = await self.create_construction_action(p)
+                    if action != None:
+                        to_remove.append(p)
+                        actions.append(action)
+                else:
+                    #TODO: presend worker
+                    pass
+                minerals_left -= cost[0]
+                vespene_left -= cost[1]
         for p in to_remove:
             # TODO: change logic to change priorities instead of removing stuff from queue in some cases?
             priorities.delete(p)

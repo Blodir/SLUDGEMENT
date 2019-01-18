@@ -45,24 +45,22 @@ class UnitManager():
 
         # ARMY MANAGEMENT
 
-        print(self.scouting_ttl, self.unselectable.amount, enemy_raiders_value)
-        if self.unselectable.amount == 0:
-            if army_units(LING).exists and self.scouting_ttl < 0 and enemy_raiders_value == 0:
-                print('scouting')
-                self.scouting_ttl = 300
-                unit: Unit = army_units(LING).random
-                scouting_order: List[Point2] = []
-                keys: List[Point2] = list(self.bot.expansion_locations.keys())
-                for idx in range(len(self.bot.expansion_locations)):
-                    closest = self.bot.start_location.closest(keys)
-                    scouting_order.append(closest)
-                    keys.remove(closest)
-                for position in scouting_order:
-                    actions.append(unit.move(position, True))
-                    self.unselectable.append(unit)
+        if army_units(LING).exists and self.scouting_ttl < 0 and enemy_raiders_value == 0:
+            self.scouting_ttl = 300
+            unit: Unit = army_units(LING).random
+            actions.append(unit.stop())
+            scouting_order: List[Point2] = []
+            keys: List[Point2] = list(self.bot.expansion_locations.keys())
+            for idx in range(len(self.bot.expansion_locations)):
+                closest = self.bot.start_location.closest(keys)
+                scouting_order.append(closest)
+                keys.remove(closest)
+            for position in scouting_order:
+                actions.append(unit.move(position, True))
+            self.unselectable.append(unit)
                 
         for unit in self.unselectable:
-            self.bot._client.debug_text_world(f'scouting', Point3((unit.position.x, unit.position.y, 10)), None, 12)
+            self.bot._client.debug_text_world(f'unselectable', Point3((unit.position.x, unit.position.y, 10)), None, 12)
 
         groups: List[Units] = self.group_army(army_units.tags_not_in(self.unselectable.tags))
 
@@ -82,16 +80,16 @@ class UnitManager():
                     self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
                 else:
                     # retreat somewhwere
-                    move_position = self.bot.start_location
-                    if group.center.distance_to(move_position) < 3:
+                    move_position = self.bot.main_minerals.center
+                    if group.center.distance_to(move_position) < 5:
                         actions.extend(self.command_group(group, AbilityId.ATTACK, move_position))
                         self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
                         actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
                         self.bot._client.debug_text_world(f'retreating', Point3((group.center.x, group.center.y, 10)), None, 12)
             else:
-                # do other stuff
                 if group_value > 1.2 * estimated_enemy_value:
+                    # attack toward closest enemy buildings
                     if self.bot.known_enemy_units.exists:
                         attack_position = self.bot.known_enemy_units.closest_to(group.center).position
                     else:
@@ -100,7 +98,7 @@ class UnitManager():
                     self.bot._client.debug_text_world(f'attacking base', Point3((group.center.x, group.center.y, 10)), None, 12)
                 else:
                     # merge
-                    other_units: Units = all_army.tags_not_in(group.tags)
+                    other_units: Units = all_army.tags_not_in(group.tags.union(self.unselectable.tags))
                     if other_units.exists:
                         closest_other_unit: Unit = other_units.closest_to(group.center)
                         actions.extend(self.command_group(group, AbilityId.MOVE, closest_other_unit.position))
@@ -110,7 +108,7 @@ class UnitManager():
 
         # QUEENS AND DRONES
         for expansion in self.bot.owned_expansions:
-            enemy_raid = observed_enemy_army.closer_than(20, expansion)
+            enemy_raid: Units = observed_enemy_army.closer_than(20, expansion)
             if enemy_raid.exists:
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
                 defending_army: Units = all_army.closer_than(15, expansion)
@@ -129,6 +127,10 @@ class UnitManager():
                             if enemy_raid.closer_than(5, defender.position).exists:
                                 self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
                                 actions.append(defender.attack(expansion.position))
+                            elif enemy_raid.closer_than(10, defender.position).exists:
+                                if enemy_raid.of_type({DRONE, UnitTypeId.SCV, UnitTypeId.PROBE}).exists:
+                                    self.bot._client.debug_text_world(f'defend worker rush', Point3((pos.x, pos.y, 10)), None, 12)
+                                    actions.append(defender.attack(expansion.position))
 
 
 
@@ -245,7 +247,7 @@ class UnitManager():
                 continue
             # TODO: fix recursive grouping
             # neighbors: Units = self.find_neighbors(unit, army.tags_not_in(set(already_grouped_tags)))
-            neighbors: Units = army.closer_than(5, unit.position)
+            neighbors: Units = army.closer_than(10, unit.position)
             groups.append(neighbors)
             already_grouped_tags.extend(neighbors.tags)
         

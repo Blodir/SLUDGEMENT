@@ -27,9 +27,21 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
-            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value - self.bot.calculate_combat_value(self.bot.units(DRONE)):
-                self.spending_queue.reprioritize(LING, 39)
+            # Make army or drones ?
+            if self.bot.units(DRONE).amount > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value:
+                self.spending_queue.reprioritize(ARMY, 39)
+            else:
+                self.spending_queue.reprioritize(ARMY, 3)
+            if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value:
+                # panic queens
                 self.spending_queue.reprioritize(QUEEN, 38)
+            else:
+                self.spending_queue.reprioritize(QUEEN, 2)
+
+            # Make inject queens
+            if self.need_queen():
+                self.spending_queue.reprioritize(QUEEN, 21)
+
 
             if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
                 self.spending_queue.reprioritize(LINGSPEED, 31)
@@ -42,9 +54,6 @@ class SpendingQueue():
 
             if self.need_drone():
                 self.spending_queue.reprioritize(DRONE, 5)
-
-            if self.need_queen():
-                self.spending_queue.reprioritize(QUEEN, 21)
 
     def need_supply(self) -> bool:
         if self.bot.supply_cap >= 200:

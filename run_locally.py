@@ -6,6 +6,7 @@ from sc2.player import Bot, Computer
 from bot import MyBot
 from examples.zerg.zerg_rush import ZergRushBot
 from examples.worker_rush import WorkerRushBot
+from examples.terran.mass_reaper import MassReaperBot
 
 def main():
     with open("botinfo.json") as f:
