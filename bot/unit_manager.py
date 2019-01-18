@@ -21,6 +21,7 @@ class UnitManager():
         self.control_group_manager = control_group_manager
         self.scouting_manager = scouting_manager
         self.unselectable = Units([], self.bot._game_data)
+        self.unselectable_enemy_units = Units([], self.bot._game_data)
         self.scouting_ttl = 300
 
     def iterate(self, iteration):
@@ -43,7 +44,7 @@ class UnitManager():
             pos = observed_enemy.position
             self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
 
-        # ARMY MANAGEMENT
+        # SCOUTING
 
         if army_units(LING).exists and self.scouting_ttl < 0 and enemy_raiders_value == 0:
             self.scouting_ttl = 300
@@ -58,9 +59,18 @@ class UnitManager():
             for position in scouting_order:
                 actions.append(unit.move(position, True))
             self.unselectable.append(unit)
-                
+
+        # REMOVE IDLE UNSELECTABLE UNITS
+        to_remove = []
+        print(self.unselectable)
         for unit in self.unselectable:
             self.bot._client.debug_text_world(f'unselectable', Point3((unit.position.x, unit.position.y, 10)), None, 12)
+            if unit.is_idle:
+                to_remove.append(unit.tag)
+        self.unselectable = self.unselectable.tags_not_in(set(to_remove))
+
+            
+        # ARMY GROUPS
 
         groups: List[Units] = self.group_army(army_units.tags_not_in(self.unselectable.tags))
 
@@ -70,7 +80,7 @@ class UnitManager():
                 closest_enemy = observed_enemy_army.closest_to(group.center)
                 if closest_enemy.distance_to(group.center) < 15:
                     nearby_enemies: Units = observed_enemy_army.closer_than(15, closest_enemy)
-                    enemy_value = self.bot.calculate_combat_value(nearby_enemies)
+                    enemy_value = self.bot.calculate_combat_value(nearby_enemies.ready)
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
@@ -114,7 +124,7 @@ class UnitManager():
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
                 defending_army: Units = all_army.closer_than(15, expansion)
                 if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
-                    for defender in self.bot.units.closer_than(15, expansion):
+                    for defender in self.bot.units.closer_than(15, expansion).tags_not_in(self.unselectable.tags):
                         pos = defender.position
                         if expansion != self.bot.start_location:
                             if defender.type_id == DRONE:
@@ -127,12 +137,32 @@ class UnitManager():
                             # counter worker rush
                             if enemy_raid.closer_than(5, defender.position).exists:
                                 self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
-                                actions.append(defender.attack(expansion.position))
-                            elif enemy_raid.closer_than(10, defender.position).exists:
+                                actions.append(defender.attack(enemy_raid.center))
+                            elif enemy_raid.closer_than(8, defender.position).exists:
                                 if enemy_raid.of_type({DRONE, UnitTypeId.SCV, UnitTypeId.PROBE}).exists:
                                     self.bot._client.debug_text_world(f'defend worker rush', Point3((pos.x, pos.y, 10)), None, 12)
                                     actions.append(defender.attack(expansion.position))
 
+        # DEFEND CANNON RUSH WITH DRONES
+
+        for expansion in self.bot.owned_expansions:
+            enemy_scouting_workers = self.bot.known_enemy_units({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+            enemy_proxies = self.bot.known_enemy_structures.closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+            if enemy_proxies.exists:
+                for proxy in enemy_proxies:
+                    if proxy.type_id == UnitTypeId.PHOTONCANNON:
+                        for drone in self.bot.units(DRONE).tags_not_in(self.unselectable.tags).take(4, False):
+                            actions.append(drone.attack(proxy))
+                            self.unselectable.append(drone)
+                            self.unselectable_enemy_units.append(proxy)
+            if enemy_scouting_workers.exists:
+                for enemy_worker in enemy_scouting_workers:
+                    own_workers: Units = self.bot.units(DRONE).tags_not_in(self.unselectable.tags)
+                    if own_workers.exists:
+                        own_worker: Unit = own_workers.closest_to(enemy_worker)
+                        actions.append(own_worker.attack(enemy_worker))
+                        self.unselectable.append(own_worker)
+                        self.unselectable_enemy_units.append(enemy_worker)
 
 
 

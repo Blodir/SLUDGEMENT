@@ -8,6 +8,7 @@ from examples.zerg.zerg_rush import ZergRushBot
 from examples.worker_rush import WorkerRushBot
 from examples.terran.mass_reaper import MassReaperBot
 from examples.terran.proxy_rax import ProxyRaxBot
+from examples.protoss.cannon_rush import CannonRushBot
 
 def main():
     with open("botinfo.json") as f:
@@ -17,7 +18,7 @@ def main():
 
     run_game(maps.get("Catalyst LE"), [
         Bot(race, MyBot()),
-        Bot(race.Terran, ProxyRaxBot())
+        Bot(race.Protoss, CannonRushBot())
     ], realtime=False, step_time_limit=2.0, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
 
 if __name__ == '__main__':

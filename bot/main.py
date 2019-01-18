@@ -42,13 +42,17 @@ class MyBot(sc2.BotAI):
 
     def _prepare_first_step(self):
         self.expansion_locations
-        self.enemy_natural = self.calculate_enemy_natural()
         return super()._prepare_first_step()
 
     async def on_unit_created(self, unit:Unit):
         # if unit.type_id == LING:
         #    self.control_group_manager.get_group(2).add(unit)
-        pass
+        if unit.type_id == OVERLORD:
+            if self.units(OVERLORD).amount == 2:
+                positions = []
+                positions.append(self.own_natural)
+                for position in positions:
+                    await self.do(unit.move(position, True))
 
     async def on_unit_destroyed(self, unit_tag):
         # TODO: remove destroyed unit from all control groups
@@ -57,7 +61,8 @@ class MyBot(sc2.BotAI):
         self.scouting_manager.remove_observation(unit_tag)
         if self.unit_manager.unselectable.tags_in({unit_tag}).exists:
             self.unit_manager.unselectable = self.unit_manager.unselectable.tags_not_in({unit_tag})
-        pass
+        if self.unit_manager.unselectable_enemy_units.tags_in({unit_tag}).exists:
+            self.unit_manager.unselectable_enemy_units = self.unit_manager.unselectable_enemy_units.tags_not_in({unit_tag})
 
     async def on_building_construction_complete(self, unit: Unit):
         if unit.type_id == EXTRACTOR:
@@ -74,6 +79,9 @@ class MyBot(sc2.BotAI):
                 if unit.mineral_contents > 0:
                     mins.append(unit)
             self.main_minerals = Units(mins, self._game_data)
+
+            self.enemy_natural = self.calculate_enemy_natural()
+            self.own_natural = self.calculate_own_natural()
 
             actions.append(self.units(OVERLORD).first.move(self.enemy_natural))
             await self.chat_send(f"Name: {self.NAME}")
@@ -96,17 +104,17 @@ class MyBot(sc2.BotAI):
                 mineral_field = self.state.mineral_field.closest_to(hatch.position)
                 actions.append(hatch(AbilityId.RALLY_HATCHERY_WORKERS, mineral_field))
 
+        # MANAGE ARMY (order matters, manage army before worker redistribution to fix bug with unselectable units)
+        actions.extend(self.unit_manager.iterate(iteration))
+
         # REDISTRIBUTE WORKERS
         for hatch in self.units(HATCHERY):
-            if hatch.surplus_harvesters > 4:
+            if hatch.surplus_harvesters > 2:
                 await self.distribute_workers()
                 break
         if self.units(DRONE).idle.exists:
             await self.distribute_workers()
         
-        # MANAGE ARMY
-        actions.extend(self.unit_manager.iterate(iteration))
-
         # EXECUTE ACTIONS
         await self.do_actions(actions)
 
@@ -280,6 +288,16 @@ class MyBot(sc2.BotAI):
         distance = math.inf
         for expansion in self.expansion_locations:
             temp = expansion.distance2_to(enemy_base)
+            if temp < distance and temp > 0:
+                distance = temp
+                best = expansion
+        return best
+
+    def calculate_own_natural(self) -> Point2:
+        best = None
+        distance = math.inf
+        for expansion in self.expansion_locations:
+            temp = expansion.distance2_to(self.start_location)
             if temp < distance and temp > 0:
                 distance = temp
                 best = expansion
