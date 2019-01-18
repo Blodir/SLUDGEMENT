@@ -60,16 +60,17 @@ class UnitManager():
                 actions.append(unit.move(position, True))
             self.unselectable.append(unit)
 
-        # REMOVE IDLE UNSELECTABLE UNITS
+        # UPDATE UNSELECTABLE UNITS SNAPSHOTS
+
+        self.unselectable = self.bot.units.tags_in(self.unselectable.tags)
+
         to_remove = []
-        print(self.unselectable)
         for unit in self.unselectable:
             self.bot._client.debug_text_world(f'unselectable', Point3((unit.position.x, unit.position.y, 10)), None, 12)
-            if unit.is_idle:
+            if unit.is_idle or unit.is_gathering or not unit.is_visible:
                 to_remove.append(unit.tag)
         self.unselectable = self.unselectable.tags_not_in(set(to_remove))
 
-            
         # ARMY GROUPS
 
         groups: List[Units] = self.group_army(army_units.tags_not_in(self.unselectable.tags))
@@ -138,10 +139,10 @@ class UnitManager():
                             if enemy_raid.closer_than(5, defender.position).exists:
                                 self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
                                 actions.append(defender.attack(enemy_raid.center))
-                            elif enemy_raid.closer_than(8, defender.position).exists:
-                                if enemy_raid.of_type({DRONE, UnitTypeId.SCV, UnitTypeId.PROBE}).exists:
+                            elif enemy_raid.of_type({DRONE, UnitTypeId.SCV, UnitTypeId.PROBE}).exists:
+                                if raid_value > 90:
                                     self.bot._client.debug_text_world(f'defend worker rush', Point3((pos.x, pos.y, 10)), None, 12)
-                                    actions.append(defender.attack(expansion.position))
+                                    actions.append(defender.attack(enemy_raid.center))
 
         # DEFEND CANNON RUSH WITH DRONES
 
@@ -278,7 +279,7 @@ class UnitManager():
                 continue
             # TODO: fix recursive grouping
             # neighbors: Units = self.find_neighbors(unit, army.tags_not_in(set(already_grouped_tags)))
-            neighbors: Units = army.closer_than(10, unit.position)
+            neighbors: Units = army.closer_than(15, unit.position)
             groups.append(neighbors)
             already_grouped_tags.extend(neighbors.tags)
         

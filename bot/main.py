@@ -74,17 +74,24 @@ class MyBot(sc2.BotAI):
         actions = []
 
         if iteration == 0:
+            actions.append(self.units(LARVA).random.train(DRONE))
+            await self.do_actions(actions)
+            return
+        if iteration == 1:
             mins = []
             for unit in self.expansion_locations[self.start_location]:
                 if unit.mineral_contents > 0:
                     mins.append(unit)
             self.main_minerals = Units(mins, self._game_data)
 
+            await self.chat_send("Bow down to your invertebrate overlords")
+            return
+        if iteration == 2:
             self.enemy_natural = self.calculate_enemy_natural()
             self.own_natural = self.calculate_own_natural()
-
             actions.append(self.units(OVERLORD).first.move(self.enemy_natural))
-            await self.chat_send(f"Name: {self.NAME}")
+            await self.do_actions(actions)
+            return
 
         # SCOUT
         self.scouting_manager.iterate()
@@ -108,11 +115,10 @@ class MyBot(sc2.BotAI):
         actions.extend(self.unit_manager.iterate(iteration))
 
         # REDISTRIBUTE WORKERS
-        for hatch in self.units(HATCHERY):
-            if hatch.surplus_harvesters > 2:
-                await self.distribute_workers()
-                break
-        if self.units(DRONE).idle.exists:
+        oversaturated_bases = self.units(HATCHERY).filter(lambda h: h.surplus_harvesters > 2)
+        if oversaturated_bases.exists:
+            await self.distribute_workers()
+        elif self.units(DRONE).idle.exists:
             await self.distribute_workers()
         
         # EXECUTE ACTIONS
@@ -217,9 +223,11 @@ class MyBot(sc2.BotAI):
                     for geyser in await self.get_own_geysers():
                         if await self.can_place(EXTRACTOR, geyser.position):
                             structure_position = geyser
+                            break
                 else:
                     structure_position = await self.find_building_placement(id)
                 if structure_position:
+                    self.unit_manager.unselectable.append(worker)
                     return worker.build(id, structure_position)
         elif construction_type == ConstructionType.FROM_BUILDING:
             buildingId = get_construction_building(id)
@@ -235,8 +243,8 @@ class MyBot(sc2.BotAI):
                 return self.units(LARVA).random.train(id)
         return None
 
-    async def get_own_geysers(self):
-        geysers = []
+    async def get_own_geysers(self) -> Units:
+        geysers: Units = Units([], self._game_data)
         for own_expansion in self.owned_expansions:
             for expansion in self.expansion_locations:
                 if expansion == own_expansion:
