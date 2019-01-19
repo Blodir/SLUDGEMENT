@@ -1,4 +1,5 @@
-from typing import List, Union
+from typing import List, Union, Dict
+import random
 
 from sc2 import BotAI
 from sc2.units import Units
@@ -7,24 +8,21 @@ from sc2.ids.ability_id import AbilityId
 from sc2.unit_command import UnitCommand
 from sc2.position import Point2, Point3
 
-from .control_group_manager import ControlGroupManager
-from .control_group import ControlGroup
 from .scouting_manager import ScoutingManager
 
 from .data import *
-from .util import *
 
 class UnitManager():
 
-    def __init__(self, bot: BotAI, control_group_manager: ControlGroupManager, scouting_manager: ScoutingManager):
+    def __init__(self, bot: BotAI, scouting_manager: ScoutingManager):
         self.bot = bot
-        self.control_group_manager = control_group_manager
         self.scouting_manager = scouting_manager
         self.unselectable = Units([], self.bot._game_data)
         self.unselectable_enemy_units = Units([], self.bot._game_data)
         self.scouting_ttl = 300
+        self.inject_targets: Dict[Unit, Unit] = {}
 
-    def iterate(self, iteration):
+    async def iterate(self, iteration):
         self.scouting_ttl -= 1
 
         actions: List[UnitCommand] = []
@@ -33,20 +31,34 @@ class UnitManager():
         observed_enemy_army = self.scouting_manager.observed_enemy_units.filter(lambda u: u.can_attack_ground)
         estimated_enemy_value = self.scouting_manager.estimated_enemy_army_value
 
-        enemy_raiders = self.get_enemy_raiders()
-        enemy_raiders_value = 0
-        for base_position in enemy_raiders:
-            enemy_raiders_value += self.bot.calculate_combat_value(enemy_raiders[base_position])
-
         army_units = all_army
 
         for observed_enemy in observed_enemy_army:
             pos = observed_enemy.position
             self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
 
+
+        # ASSIGN INJECT QUEENS
+        for hatch in self.bot.units(HATCHERY).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
+            free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
+            if free_queens.exists:
+                queen = free_queens.random
+                self.inject_targets[hatch] = queen
+                self.unselectable.append(queen)
+        
+        # INJECT
+        for hatch in self.inject_targets:
+            inject_queen = self.inject_targets[hatch]
+            abilities = await self.bot.get_available_abilities(inject_queen)
+            if AbilityId.EFFECT_INJECTLARVA in abilities:
+                actions.append(inject_queen(AbilityId.EFFECT_INJECTLARVA, hatch))
+            else:
+                # move to hatch
+                pass
+
         # SCOUTING
 
-        if army_units(LING).exists and self.scouting_ttl < 0 and enemy_raiders_value == 0:
+        if army_units(LING).exists and self.scouting_ttl < 0 and self.scouting_manager.enemy_raiders_value == 0:
             self.scouting_ttl = 300
             unit: Unit = army_units(LING).random
             actions.append(unit.stop())
@@ -67,7 +79,7 @@ class UnitManager():
         to_remove = []
         for unit in self.unselectable:
             self.bot._client.debug_text_world(f'unselectable', Point3((unit.position.x, unit.position.y, 10)), None, 12)
-            if unit.is_idle or unit.is_gathering or not unit.is_visible:
+            if (unit.is_idle and not unit.tag in map(lambda q: q.tag, self.inject_targets.values())) or unit.is_gathering or not unit.is_visible:
                 to_remove.append(unit.tag)
         self.unselectable = self.unselectable.tags_not_in(set(to_remove))
 
@@ -99,13 +111,14 @@ class UnitManager():
                     if group.center.distance_to(move_position) < 5:
                         # Last resort attack with everything
                         everything:Units = group
-                        if enemy_value > 200:
+                        if enemy_value > 150:
                             everything = self.bot.units.closer_than(15, group.center)
                             self.unselectable.extend(everything)
-                        everything = everything.__and__(self.bot.units(QUEEN))
+                        everything = everything + self.bot.units(QUEEN)
                         actions.extend(self.command_group(everything, AbilityId.ATTACK, nearby_enemies.center))
-                        self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
+                        self.bot._client.debug_text_world(f'last resort', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
+                        # TODO: dont retreat if too close to enemy
                         actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
                         self.bot._client.debug_text_world(f'retreating', Point3((group.center.x, group.center.y, 10)), None, 12)
             else:
@@ -128,22 +141,18 @@ class UnitManager():
                     else:
                         self.bot._client.debug_text_world(f'idle', Point3((group.center.x, group.center.y, 10)), None, 12)
 
-        # QUEENS AND DRONES
+        # DRONE DEFENSE
         for expansion in self.bot.owned_expansions:
             enemy_raid: Units = observed_enemy_army.closer_than(20, expansion)
             if enemy_raid.exists:
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
                 defending_army: Units = all_army.closer_than(15, expansion)
                 if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
-                    for defender in self.bot.units.closer_than(15, expansion).tags_not_in(self.unselectable.tags):
+                    for defender in self.bot.units(DRONE).closer_than(15, expansion).tags_not_in(self.unselectable.tags):
                         pos = defender.position
                         if expansion != self.bot.start_location:
-                            if defender.type_id == DRONE:
-                                self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
-                                actions.append(defender.gather(self.bot.main_minerals.random))
-                            elif defender.type_id == QUEEN:
-                                self.bot._client.debug_text_world(f'attacking', Point3((pos.x, pos.y, 10)), None, 12)
-                                actions.append(defender.attack(expansion.position))
+                            self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
+                            actions.append(defender.gather(self.bot.main_minerals.random))
                         else:
                             # counter worker rush
                             if enemy_raid.closer_than(5, defender.position).exists:
@@ -175,10 +184,32 @@ class UnitManager():
                         self.unselectable.append(own_worker)
                         self.unselectable_enemy_units.append(enemy_worker)
 
+        # EXTRA QUEEN CONTROL
+        extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
+        # if there's a fight contribute otherwise make creep tumors
+        if extra_queens.exists:
+            if self.bot.known_enemy_units.exists and self.bot.units.closer_than(20, extra_queens.center).tags_not_in(extra_queens.tags).filter(lambda u: u.is_attacking).exists and self.bot.known_enemy_units.closer_than(20, extra_queens.center).exists:
+                actions.extend(self.command_group(extra_queens, AbilityId.ATTACK, self.bot.known_enemy_units.closest_to(extra_queens.center).position))
+                self.bot._client.debug_text_world(f'queen attack', Point3((extra_queens.center.x, extra_queens.center.y, 10)), None, 12)
+            else:
+                for queen in extra_queens:
+                    if queen.is_idle:
+                        abilities = await self.bot.get_available_abilities(queen)
+                        position = await self.bot.find_tumor_placement()
+                        if AbilityId.BUILD_CREEPTUMOR_QUEEN in abilities and self.bot.has_creep(position):
+                            actions.append(queen(AbilityId.BUILD_CREEPTUMOR, position))
+                            self.unselectable.append(queen)
+                        else:
+                            if queen.position.distance_to(extra_queens.center) > 2:
+                                # regroup extra queens
+                                actions.append(queen.move(extra_queens.center))
 
-
-
-
+        # CREEP TUMORS
+        for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED):
+            abilities = await self.bot.get_available_abilities(tumor)
+            position: Point2 = tumor.position + (9 * Point2((-1 + 2 * random.random(), -1 + 2 * random.random())))
+            if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
+                actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
 
 
 
@@ -273,13 +304,6 @@ class UnitManager():
                 return True
         return False
     
-    def get_enemy_raiders(self):
-        output = {}
-        for exp_position in self.bot.owned_expansions:
-            enemies = self.bot.known_enemy_units.closer_than(15, exp_position)
-            output[exp_position] = enemies
-        return output
-    
     def group_army(self, army: Units) -> List[Units]:
         groups: List[Units] = []
         already_grouped_tags = []
@@ -314,3 +338,14 @@ class UnitManager():
     
     def get_engagement_prediction(self, army1: Units, army2: Units):
         pass
+    
+    async def inject(self):
+        ready_queens = []
+        actions = []
+        for queen in self.bot.units(QUEEN).idle:
+            abilities = await self.bot.get_available_abilities(queen)
+            if AbilityId.EFFECT_INJECTLARVA in abilities:
+                ready_queens.append(queen)
+        for queen in ready_queens:
+            actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.bot.units(HATCHERY).first))
+        return actions

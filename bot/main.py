@@ -4,6 +4,7 @@ import math
 import time
 import datetime
 import copy
+import random
 
 from typing import Union
 from pathlib import Path
@@ -25,9 +26,7 @@ from .priority_queue import PriorityQueue
 from .spending_queue import SpendingQueue
 from .unit_manager import UnitManager
 from .scouting_manager import ScoutingManager
-from .control_group_manager import ControlGroupManager
 from .data import *
-from .util import *
 
 # Bots are created as classes and they need to have on_step method defined.
 # Do not change the name of the class!
@@ -36,10 +35,9 @@ class MyBot(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def on_start(self):
-        self.control_group_manager = ControlGroupManager(self)
         self.scouting_manager = ScoutingManager(self)
         self.spending_queue = SpendingQueue(self, self.scouting_manager)
-        self.unit_manager = UnitManager(self, self.control_group_manager, self.scouting_manager)
+        self.unit_manager = UnitManager(self, self.scouting_manager)
 
     def _prepare_first_step(self):
         self.expansion_locations
@@ -72,6 +70,14 @@ class MyBot(sc2.BotAI):
             self.unit_manager.unselectable = self.unit_manager.unselectable.tags_not_in({unit_tag})
         if self.unit_manager.unselectable_enemy_units.tags_in({unit_tag}).exists:
             self.unit_manager.unselectable_enemy_units = self.unit_manager.unselectable_enemy_units.tags_not_in({unit_tag})
+        
+        # remove from inject targets
+        if unit_tag in list(map(lambda q: q.tag,self.unit_manager.inject_targets.values())):
+            to_remove = None
+            for hatch in self.unit_manager.inject_targets:
+                if self.unit_manager.inject_targets[hatch].tag == unit_tag:
+                    to_remove = hatch
+            del self.unit_manager.inject_targets[to_remove]
 
     async def on_building_construction_complete(self, unit: Unit):
         if unit.type_id == EXTRACTOR:
@@ -107,9 +113,6 @@ class MyBot(sc2.BotAI):
         # SPEND RESOURCES
         actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
 
-        # INJECT
-        actions.extend(await self.inject())
-
         # SET RALLY POINTS
         if math.floor(self.getTimeInSeconds()) % 10 == 0 and self.units(HATCHERY).not_ready.exists:
             for hatch in self.units(HATCHERY).not_ready:
@@ -117,7 +120,7 @@ class MyBot(sc2.BotAI):
                 actions.append(hatch(AbilityId.RALLY_HATCHERY_WORKERS, mineral_field))
 
         # MANAGE ARMY (order matters, manage army before worker redistribution to fix bug with unselectable units)
-        actions.extend(self.unit_manager.iterate(iteration))
+        actions.extend(await self.unit_manager.iterate(iteration))
 
         # REDISTRIBUTE WORKERS
         oversaturated_bases = self.units(HATCHERY).filter(lambda h: h.surplus_harvesters > 2)
@@ -137,17 +140,6 @@ class MyBot(sc2.BotAI):
         # PRINT TIME
         execution_time = (time.time() - step_start_time) * 1000
         print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}ms')
-
-    async def inject(self):
-        ready_queens = []
-        actions = []
-        for queen in self.units(QUEEN).idle:
-            abilities = await self.get_available_abilities(queen)
-            if AbilityId.EFFECT_INJECTLARVA in abilities:
-                ready_queens.append(queen)
-        for queen in ready_queens:
-            actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.units(HATCHERY).first))
-        return actions
 
     async def find_building_placement(self, unitId: UnitTypeId) -> Point2 or bool:
         if unitId == HATCHERY:
@@ -329,3 +321,16 @@ class MyBot(sc2.BotAI):
             if unit.mineral_contents > 0:
                 mins.append(unit)
         return mins
+    
+    async def find_tumor_placement(self) -> Point2:
+        creep_emitters: Units = self.units({HATCHERY, UnitTypeId.CREEPTUMORBURROWED})
+        while True:
+            target_emitter: Unit = creep_emitters.random
+            target_position: Point2 = target_emitter.position + (9 * Point2((-1 + 2 * random.random(), -1 + 2 * random.random())))
+            check = True
+            for emitter in creep_emitters:
+                if target_position.distance_to(emitter.position) < 9:
+                    check = False
+                    break
+            if check:
+                return target_position

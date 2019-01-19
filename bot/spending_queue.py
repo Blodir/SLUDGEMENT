@@ -2,7 +2,6 @@ from .priority_queue import PriorityQueue
 from sc2 import BotAI
 
 from .data import *
-from .util import *
 from .build_order import BuildOrder
 from .scouting_manager import ScoutingManager
 
@@ -34,8 +33,10 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(ARMY, 39)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
-            if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value:
-                # panic queens
+            if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value and (
+                self.scouting_manager.observed_enemy_units.closer_than(100, self.bot.own_natural)
+            ):
+                # panic queens if large army within 100 units of natural
                 self.spending_queue.reprioritize(QUEEN, 38)
             else:
                 self.spending_queue.reprioritize(QUEEN, 2)

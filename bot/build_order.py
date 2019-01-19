@@ -1,5 +1,15 @@
+from typing import List
+
 from sc2 import BotAI
+from sc2.ids.unit_typeid import UnitTypeId
 from .data import *
+
+class BOStep():
+    def __init__(self, condition, unit: UnitTypeId):
+        self.condition = condition
+        self.unit_id: UnitTypeId = unit
+    def try_condition(self) -> bool:
+        return self.condition()
 
 class BuildOrder():
     def __init__(self, bot: BotAI):
@@ -25,3 +35,26 @@ class BuildOrder():
             priorities.append((OVERLORD, 47))
             self.iteration += 1
         return priorities
+    
+    def pool_first(self) -> List[BOStep]:
+        return [
+            (BOStep(lambda: self.bot.supply_used >= 13, OVERLORD)),
+            (BOStep(lambda: self.bot.supply_used >= 16, SPAWNINGPOOL)),
+            (BOStep(lambda: self.bot.supply_used >= 17, HATCHERY)),
+            (BOStep(lambda: self.bot.supply_used >= 17, EXTRACTOR)),
+            (BOStep(lambda: self.bot.supply_used >= 19, OVERLORD)),
+            (BOStep(lambda: self.bot.supply_used >= 19, LING))
+        ]
+        
+
+class BuildOrderRunner():
+    def __init__(self, build_order: List[BOStep]):
+        self.state: int = 0
+        self.steps: List[BOStep] = build_order
+    def iterate(self) -> (UnitTypeId, int):
+        # TODO: FIND A WAY TO ENSURE LAST BUILDING WAS STARTED
+        build_priorities = [(DRONE, 5)]
+        if self.steps[self.state].try_condition():
+            build_priorities.append((self.steps[self.state].unit_id, 50))
+            self.state += 1
+        return build_priorities

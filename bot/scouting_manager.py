@@ -7,7 +7,6 @@ from sc2.position import Point3
 
 from .unit_observation import UnitObservation
 from .data import *
-from .util import *
 
 class ScoutingManager():
     def __init__(self, bot: BotAI):
@@ -61,7 +60,18 @@ class ScoutingManager():
             for expansion in self.bot.owned_expansions:
                 if self.observed_enemy_units.structure.closer_than(80, expansion).exists:
                     self.enemy_proxies_exist = True
+        
+        self.enemy_raiders = self.get_enemy_raiders()
+        self.enemy_raiders_value = 0
+        for base_position in self.enemy_raiders:
+            self.enemy_raiders_value += self.bot.calculate_combat_value(self.enemy_raiders[base_position])
 
+    def get_enemy_raiders(self):
+        output = {}
+        for exp_position in self.bot.owned_expansions:
+            enemies = self.bot.known_enemy_units.closer_than(15, exp_position)
+            output[exp_position] = enemies
+        return output
 
     def remove_observation(self, tag):
         to_remove = None
