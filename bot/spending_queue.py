@@ -18,7 +18,7 @@ class SpendingQueue():
         return self.spending_queue
     
     def iterate(self):
-        if self.bot.supply_used < 21:
+        if self.bot.supply_used < 20:
             bo_priorities = self.build.standard()
             for p in bo_priorities:
                 self.spending_queue.reprioritize(p[0], p[1])
@@ -28,7 +28,9 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             # Make army or drones ?
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > 22 * self.scouting_manager.enemy_townhall_count or self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value:
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > 22 * self.scouting_manager.enemy_townhall_count or (
+                self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
+                self.scouting_manager.enemy_proxies_exist):
                 self.spending_queue.reprioritize(ARMY, 39)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)

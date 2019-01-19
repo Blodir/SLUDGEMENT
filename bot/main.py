@@ -19,6 +19,7 @@ from sc2.units import Units
 from sc2.position import Point2, Point3
 from sc2.unit_command import UnitCommand
 from sc2.game_data import *
+from sc2.data import Race
 
 from .priority_queue import PriorityQueue
 from .spending_queue import SpendingQueue
@@ -45,12 +46,20 @@ class MyBot(sc2.BotAI):
         return super()._prepare_first_step()
 
     async def on_unit_created(self, unit:Unit):
-        # if unit.type_id == LING:
-        #    self.control_group_manager.get_group(2).add(unit)
+        # Scout with second ovie
         if unit.type_id == OVERLORD:
             if self.units(OVERLORD).amount == 2:
                 positions = []
-                positions.append(self.own_natural)
+                if self.enemy_race == Race.Protoss:
+                    # Scout for cannon rush
+                    positions.append(self.own_natural)
+                if self.enemy_race == Race.Terran:
+                    # Scout for proxy rax
+                    for expansion in self.expansion_locations:
+                        if expansion == self.start_location or expansion == self.own_natural:
+                            continue
+                        if expansion.distance_to(self.start_location) < 50 or expansion.distance_to(self.own_natural) < 50:
+                            positions.append(expansion)
                 for position in positions:
                     await self.do(unit.move(position, True))
 

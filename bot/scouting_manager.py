@@ -55,6 +55,13 @@ class ScoutingManager():
         self.estimated_enemy_army_value = self.bot.calculate_combat_value(self.observed_enemy_units.not_structure)
         self.own_army_value = self.bot.calculate_combat_value(self.bot.units.not_structure.ready.filter(lambda u: u.type_id != DRONE and u.type_id != QUEEN))
 
+        # Check for proxies
+        self.enemy_proxies_exist = False
+        if self.observed_enemy_units.structure.exists:
+            for expansion in self.bot.owned_expansions:
+                if self.observed_enemy_units.structure.closer_than(80, expansion).exists:
+                    self.enemy_proxies_exist = True
+
 
     def remove_observation(self, tag):
         to_remove = None

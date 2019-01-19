@@ -102,6 +102,7 @@ class UnitManager():
                         if enemy_value > 200:
                             everything = self.bot.units.closer_than(15, group.center)
                             self.unselectable.extend(everything)
+                        everything = everything.__and__(self.bot.units(QUEEN))
                         actions.extend(self.command_group(everything, AbilityId.ATTACK, nearby_enemies.center))
                         self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
