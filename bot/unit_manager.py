@@ -85,7 +85,7 @@ class UnitManager():
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
-                if group_value + self.bot.calculate_combat_value(self.bot.units(QUEEN).closer_than(7, group.center)) > enemy_value:
+                if group_value + self.bot.calculate_combat_value(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(15, group.center)) > enemy_value:
                     # attack enemy group
                     actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
                     self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
@@ -301,3 +301,6 @@ class UnitManager():
         for unit in units:
             commands.append(unit(command, target))
         return commands
+    
+    def get_engagement_prediction(self, army1: Units, army2: Units):
+        pass
