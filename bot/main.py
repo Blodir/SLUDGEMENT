@@ -78,11 +78,7 @@ class MyBot(sc2.BotAI):
             await self.do_actions(actions)
             return
         if iteration == 1:
-            mins = []
-            for unit in self.expansion_locations[self.start_location]:
-                if unit.mineral_contents > 0:
-                    mins.append(unit)
-            self.main_minerals = Units(mins, self._game_data)
+            self.main_minerals = self.get_mineral_fields_for_expansion(self.start_location)
 
             await self.chat_send("Bow down to your invertebrate overlords")
             return
@@ -310,3 +306,17 @@ class MyBot(sc2.BotAI):
                 distance = temp
                 best = expansion
         return best
+    
+    def closest_mining_expansion_location(self, position) -> Point2:
+        mining_bases: Units = self.units(HATCHERY).filter(lambda h: h.assigned_harvesters > 4)
+        if mining_bases.exists:
+            base: Unit = mining_bases.closest_to(position)
+            return base.position
+        return self.start_location
+    
+    def get_mineral_fields_for_expansion(self, expansion_position: Point2) -> Units:
+        mins: Units = Units([], self._game_data)
+        for unit in self.expansion_locations[expansion_position]:
+            if unit.mineral_contents > 0:
+                mins.append(unit)
+        return mins

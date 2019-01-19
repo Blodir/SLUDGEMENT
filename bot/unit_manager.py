@@ -91,9 +91,18 @@ class UnitManager():
                     self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
                 else:
                     # retreat somewhwere
-                    move_position = self.bot.main_minerals.center
+                    mins = self.bot.get_mineral_fields_for_expansion(self.bot.closest_mining_expansion_location(group.center).position)
+                    if mins.exists:
+                        move_position = mins.center
+                    else:
+                        move_position = self.bot.start_location
                     if group.center.distance_to(move_position) < 5:
-                        actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
+                        # Last resort attack with everything
+                        everything:Units = group
+                        if enemy_value > 200:
+                            everything = self.bot.units.closer_than(15, group.center)
+                            self.unselectable.extend(everything)
+                        actions.extend(self.command_group(everything, AbilityId.ATTACK, nearby_enemies.center))
                         self.bot._client.debug_text_world(f'attacking', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
                         actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
