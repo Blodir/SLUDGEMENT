@@ -42,6 +42,9 @@ class SpendingQueue():
             if self.need_queen():
                 self.spending_queue.reprioritize(QUEEN, 21)
 
+            # Always have some lings out
+            if self.bot.units(LING).amount < 4 and self.bot.units(SPAWNINGPOOL).exists:
+                self.spending_queue.reprioritize(LING, 32)
 
             if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
                 self.spending_queue.reprioritize(LINGSPEED, 31)
