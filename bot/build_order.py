@@ -17,7 +17,6 @@ class BORunner():
         self.finished = False
     
     def iterate(self) -> UnitTypeId:
-        print(self.step)
         if self.step >= len(self.build_order):
             self.finished = True
             return None

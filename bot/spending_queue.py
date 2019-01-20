@@ -23,14 +23,11 @@ class SpendingQueue():
         return self.spending_queue
     
     def iterate(self):
-        print(self.spending_queue)
         if not self.build_order_runner.finished:
             unit_id: UnitTypeId = self.build_order_runner.iterate()
             if unit_id:
                 self.spending_queue.reprioritize(unit_id, 50)
-            print(self.spending_queue)
         else:
-            print("test")
             self.update_hatchery_priority()
 
             # Make army or drones ?

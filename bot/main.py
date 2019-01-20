@@ -327,7 +327,10 @@ class MyBot(sc2.BotAI):
         creep_emitters: Units = self.units({HATCHERY, UnitTypeId.CREEPTUMORBURROWED})
         while True:
             target_emitter: Unit = creep_emitters.random
-            target_position: Point2 = target_emitter.position + (9 * Point2((-1 + 2 * random.random(), -1 + 2 * random.random())))
+            angle = random.randint(0, 360)
+            x = math.cos(angle)
+            y = math.sin(angle)
+            target_position: Point2 = target_emitter.position + (9 * Point2((x, y)))
             check = True
             for emitter in creep_emitters:
                 if target_position.distance_to(emitter.position) < 9:

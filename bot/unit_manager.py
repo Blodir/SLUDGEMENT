@@ -1,4 +1,5 @@
 from typing import List, Union, Dict
+import math
 import random
 
 from sc2 import BotAI
@@ -39,6 +40,7 @@ class UnitManager():
 
 
         # ASSIGN INJECT QUEENS
+        # TODO: DONT DO THIS IF ENEMIES CLOSEBY
         for hatch in self.bot.units(HATCHERY).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
             free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
             if free_queens.exists:
@@ -208,7 +210,10 @@ class UnitManager():
         for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED):
             # TODO: direct creep spread to some direction...
             abilities = await self.bot.get_available_abilities(tumor)
-            position: Point2 = tumor.position + (9 * Point2((-1 + 2 * random.random(), -1 + 2 * random.random())))
+            angle = random.randint(0, 360)
+            x = math.cos(angle)
+            y = math.sin(angle)
+            position: Point2 = tumor.position + (9 * Point2((x, y)))
             if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
                 actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
 
