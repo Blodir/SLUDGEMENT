@@ -206,6 +206,7 @@ class UnitManager():
 
         # CREEP TUMORS
         for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED):
+            # TODO: direct creep spread to some direction...
             abilities = await self.bot.get_available_abilities(tumor)
             position: Point2 = tumor.position + (9 * Point2((-1 + 2 * random.random(), -1 + 2 * random.random())))
             if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:

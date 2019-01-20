@@ -323,6 +323,7 @@ class MyBot(sc2.BotAI):
         return mins
     
     async def find_tumor_placement(self) -> Point2:
+        # TODO: SLOW function fix fix fix. Also doesn't take into consideration whether theres something blocking tumor or not
         creep_emitters: Units = self.units({HATCHERY, UnitTypeId.CREEPTUMORBURROWED})
         while True:
             target_emitter: Unit = creep_emitters.random

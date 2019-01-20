@@ -1,29 +1,36 @@
 from .priority_queue import PriorityQueue
 from sc2 import BotAI
+from sc2.data import Race
 
 from .data import *
-from .build_order import BuildOrder
+from .build_order import BOStep, BORepository, BORunner
 from .scouting_manager import ScoutingManager
 
-# TODO: Implement a buildorder
 class SpendingQueue():
     def __init__(self, bot, scouting_manager: ScoutingManager):
         self.scouting_manager = scouting_manager
         self.spending_queue = PriorityQueue()
         self.bot = bot
-        self.build = BuildOrder(bot)
+
+        self.spending_queue.reprioritize(DRONE, 5)
+
+        self.build_repository = BORepository(bot)
+
+        build = self.build_repository.hatch_first()
+        self.build_order_runner = BORunner(build)
     
     def get_spending_queue(self):
         return self.spending_queue
     
     def iterate(self):
-        if self.bot.supply_used < 20:
-            bo_priorities = self.build.standard()
-            for p in bo_priorities:
-                self.spending_queue.reprioritize(p[0], p[1])
-            if self.need_queen():
-                self.spending_queue.reprioritize(QUEEN, 21)
+        print(self.spending_queue)
+        if not self.build_order_runner.finished:
+            unit_id: UnitTypeId = self.build_order_runner.iterate()
+            if unit_id:
+                self.spending_queue.reprioritize(unit_id, 50)
+            print(self.spending_queue)
         else:
+            print("test")
             self.update_hatchery_priority()
 
             # Make army or drones ?
