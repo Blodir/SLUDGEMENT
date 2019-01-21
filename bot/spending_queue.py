@@ -18,6 +18,10 @@ class SpendingQueue():
 
         build = self.build_repository.hatch_first()
         self.build_order_runner = BORunner(build)
+
+
+
+        self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 28
     
     def get_spending_queue(self):
         return self.spending_queue
@@ -31,7 +35,7 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             # Make army or drones ?
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > 22 * self.scouting_manager.enemy_townhall_count or (
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
                 self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
                 self.scouting_manager.enemy_proxies_exist):
                 self.spending_queue.reprioritize(ARMY, 39)
