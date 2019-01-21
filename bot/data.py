@@ -34,7 +34,7 @@ class ConstructionType(enum.Enum):
     FROM_BUILDING = 1
     FROM_LARVA = 2
 
-def built_by(unitId: UnitTypeId) -> ConstructionType:
+def get_construction_type(unitId: UnitTypeId) -> ConstructionType:
     if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR:
         return ConstructionType.BUILDING
     if unitId == QUEEN or unitId == LINGSPEED:

@@ -216,7 +216,7 @@ class UnitManager():
             x = math.cos(angle)
             y = math.sin(angle)
             position: Point2 = tumor.position + (9 * Point2((x, y)))
-            if not self.bot.units(UnitTypeId.CREEPTUMORBURROWED).closer_than(9, position).exists:
+            if not self.bot.units(UnitTypeId.CREEPTUMORBURROWED).closer_than(9, position).exists and not self.bot.position_blocks_expansion(position):
                 if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
                     actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
 

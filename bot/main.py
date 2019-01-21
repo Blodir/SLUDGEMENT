@@ -62,8 +62,6 @@ class MyBot(sc2.BotAI):
                     await self.do(unit.move(position, True))
 
     async def on_unit_destroyed(self, unit_tag):
-        # TODO: remove destroyed unit from all control groups
-
         # remove destroyed unit from scouted units
         self.scouting_manager.remove_observation(unit_tag)
         if self.unit_manager.unselectable.tags_in({unit_tag}).exists:
@@ -160,16 +158,13 @@ class MyBot(sc2.BotAI):
 #########################################################################################
 #########################################################################################
     async def create_spending_actions(self, priorities: PriorityQueue):
-        # TODO: eventually take different stuff like mineral/vesp ratio to consideration
-        # eg. if building mutas and lings, you don't want to get stuck at 1k minerals and 0 vespene because mutas are higher priority
         actions = []
         to_remove = []
         minerals_left = self.minerals
         vespene_left = self.vespene
         larvae_left = self.units(LARVA).amount
-        larvae = self.units(LARVA)
         for p in priorities:
-            construction_type = built_by(p)
+            construction_type = get_construction_type(p)
             if minerals_left < 0:
                 minerals_left = 0
             if vespene_left < 0:
@@ -196,7 +191,7 @@ class MyBot(sc2.BotAI):
                     larvae_left -= 1
             else:
                 cost = self.get_resource_value(p)
-                if built_by(id) == ConstructionType.BUILDING:
+                if get_construction_type(id) == ConstructionType.BUILDING:
                     # dont count lost drone in resource cost
                     cost = (cost[0] - 50, cost[1])
                 if minerals_left >= cost[0] and vespene_left >= cost[1] and (not construction_type == ConstructionType.FROM_LARVA or larvae_left > 0):
@@ -209,11 +204,9 @@ class MyBot(sc2.BotAI):
                     pass
                 minerals_left -= cost[0]
                 vespene_left -= cost[1]
-                # TODO: FIX larva still not taken into account properly...??? bot is building drones when should be waiting for larva for lings
                 if construction_type == ConstructionType.FROM_LARVA:
                     larvae_left -= 1
         for p in to_remove:
-            # TODO: change logic to change priorities instead of removing stuff from queue in some cases?
             priorities.delete(p)
         return actions;
 
@@ -333,7 +326,6 @@ class MyBot(sc2.BotAI):
     
     async def find_tumor_placement(self) -> Point2:
         # TODO: SLOW function fix fix fix. Also doesn't take into consideration whether theres something blocking tumor or not
-        # TODO: DONT BLOCK HATCH POSITIONS
         creep_emitters: Units = self.units({HATCHERY, UnitTypeId.CREEPTUMORBURROWED})
         count = 0
         while count < 10:
@@ -348,6 +340,15 @@ class MyBot(sc2.BotAI):
                 if target_position.distance_to(emitter.position) < 9:
                     check = False
                     break
+            if self.position_blocks_expansion(target_position):
+                check = False
             if check:
                 return target_position
         return None
+
+    def position_blocks_expansion(self, target_position: Point2):
+        res = False
+        for expansion in self.expansion_locations:
+            if target_position.distance_to(expansion) < 6:
+                res = True
+        return res
