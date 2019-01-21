@@ -1,0 +1,16 @@
+# This error is reached only in lategame at like 18mins in vs team tapiiri
+
+AI step threw an error
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/sc2/main.py", line 143, in _play_game_ai
+    await ai.on_step(iteration)
+  File "/app/repo0/bot/main.py", line 123, in on_step
+    actions.extend(await self.unit_manager.iterate(iteration))
+  File "/app/repo0/bot/unit_manager.py", line 52, in iterate
+    abilities = await self.bot.get_available_abilities(inject_queen)
+  File "/usr/local/lib/python3.6/dist-packages/sc2/bot_ai.py", line 135, in get_available_abilities
+    return await self._client.query_available_abilities(units, ignore_resource_requirements)
+  File "/usr/local/lib/python3.6/dist-packages/sc2/client.py", line 263, in query_available_abilities
+    return [[AbilityId(a.ability_id) for a in b.abilities] for b in result.query.abilities][0]
+IndexError: list index out of range
+resigning due to previous error

@@ -21,7 +21,7 @@ class SpendingQueue():
 
 
 
-        self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 28
+        self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 27
     
     def get_spending_queue(self):
         return self.spending_queue
@@ -35,14 +35,14 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             # Make army or drones ?
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
+            if ((self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
                 self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
-                self.scouting_manager.enemy_proxies_exist):
+                self.scouting_manager.enemy_proxies_exist)) and not self.scouting_manager.terran_floating_buildings:
                 self.spending_queue.reprioritize(ARMY, 39)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
             if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value and (
-                self.scouting_manager.observed_enemy_units.closer_than(100, self.bot.own_natural)
+                self.scouting_manager.observed_enemy_units.closer_than(50, self.bot.own_natural)
             ):
                 # panic queens if large army within 100 units of natural
                 self.spending_queue.reprioritize(QUEEN, 38)
@@ -68,6 +68,9 @@ class SpendingQueue():
 
             if self.need_drone():
                 self.spending_queue.reprioritize(DRONE, 5)
+            
+            # TODO: Make mutas to deal with floating buildings
+
 
     def need_supply(self) -> bool:
         if self.bot.supply_cap >= 200:
@@ -94,7 +97,7 @@ class SpendingQueue():
 
     def need_queen(self) -> bool:
         queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
-        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount > queen_count
+        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount > queen_count + 1 and queen_count < 6
     
     def update_hatchery_priority(self):
         if self.need_hatchery():

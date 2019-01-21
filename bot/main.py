@@ -192,6 +192,9 @@ class MyBot(sc2.BotAI):
                     vespene_left -= cost[1]
             else:
                 cost = self.get_resource_value(p)
+                if built_by(id) == ConstructionType.BUILDING:
+                    # dont count lost drone in resource cost
+                    cost = (cost[0] - 50, cost[1])
                 if minerals_left >= cost[0] and vespene_left >= cost[1]:
                     action = await self.create_construction_action(p)
                     if action != None:
@@ -324,8 +327,11 @@ class MyBot(sc2.BotAI):
     
     async def find_tumor_placement(self) -> Point2:
         # TODO: SLOW function fix fix fix. Also doesn't take into consideration whether theres something blocking tumor or not
+        # TODO: DONT BLOCK HATCH POSITIONS
         creep_emitters: Units = self.units({HATCHERY, UnitTypeId.CREEPTUMORBURROWED})
-        while True:
+        count = 0
+        while count < 10:
+            count += 1
             target_emitter: Unit = creep_emitters.random
             angle = random.randint(0, 360)
             x = math.cos(angle)
@@ -338,3 +344,4 @@ class MyBot(sc2.BotAI):
                     break
             if check:
                 return target_position
+        return None

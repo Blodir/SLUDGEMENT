@@ -4,6 +4,7 @@ from sc2 import BotAI
 from sc2.units import Units
 from sc2.unit import Unit
 from sc2.position import Point3
+from sc2.client import Race
 
 from .unit_observation import UnitObservation
 from .data import *
@@ -65,6 +66,13 @@ class ScoutingManager():
         self.enemy_raiders_value = 0
         for base_position in self.enemy_raiders:
             self.enemy_raiders_value += self.bot.calculate_combat_value(self.enemy_raiders[base_position])
+
+        # Check for dumbfuck terrans floating buildings
+        self.terran_floating_buildings = False
+        if self.bot.enemy_race == Race.Terran and (
+            self.observed_enemy_units.not_flying.amount == 0
+        ) and self.bot.getTimeInSeconds > 360: # 6 minutes
+            self.terran_floating_buildings = True
 
     def get_enemy_raiders(self):
         output = {}

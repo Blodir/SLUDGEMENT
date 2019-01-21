@@ -41,7 +41,7 @@ class UnitManager():
 
         # ASSIGN INJECT QUEENS
         # TODO: DONT DO THIS IF ENEMIES CLOSEBY
-        for hatch in self.bot.units(HATCHERY).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
+        for hatch in Units(self.bot.units(HATCHERY).take(4, False), self.bot._game_data).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
             free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
             if free_queens.exists:
                 queen = free_queens.random
@@ -198,7 +198,7 @@ class UnitManager():
                     if queen.is_idle:
                         abilities = await self.bot.get_available_abilities(queen)
                         position = await self.bot.find_tumor_placement()
-                        if AbilityId.BUILD_CREEPTUMOR_QUEEN in abilities and self.bot.has_creep(position):
+                        if AbilityId.BUILD_CREEPTUMOR_QUEEN in abilities and position and self.bot.has_creep(position):
                             actions.append(queen(AbilityId.BUILD_CREEPTUMOR, position))
                             self.unselectable.append(queen)
                         else:
@@ -209,13 +209,16 @@ class UnitManager():
         # CREEP TUMORS
         for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED):
             # TODO: direct creep spread to some direction...
+            # Dont overmake creep xd
+            # TODO: Dont block hatch positions
             abilities = await self.bot.get_available_abilities(tumor)
             angle = random.randint(0, 360)
             x = math.cos(angle)
             y = math.sin(angle)
             position: Point2 = tumor.position + (9 * Point2((x, y)))
-            if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
-                actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
+            if not self.bot.units(UnitTypeId.CREEPTUMORBURROWED).closer_than(9, position).exists:
+                if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
+                    actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
 
 
 
