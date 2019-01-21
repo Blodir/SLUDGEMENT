@@ -71,7 +71,7 @@ class ScoutingManager():
         self.terran_floating_buildings = False
         if self.bot.enemy_race == Race.Terran and (
             self.observed_enemy_units.not_flying.amount == 0
-        ) and self.bot.getTimeInSeconds > 360: # 6 minutes
+        ) and self.bot.getTimeInSeconds() > 360: # 6 minutes
             self.terran_floating_buildings = True
 
     def get_enemy_raiders(self):
