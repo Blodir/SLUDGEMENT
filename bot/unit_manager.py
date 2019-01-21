@@ -145,7 +145,7 @@ class UnitManager():
 
         # DRONE DEFENSE
         for expansion in self.bot.owned_expansions:
-            enemy_raid: Units = observed_enemy_army.closer_than(20, expansion)
+            enemy_raid: Units = observed_enemy_army.closer_than(10, expansion)
             if enemy_raid.exists:
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
                 defending_army: Units = all_army.closer_than(15, expansion)

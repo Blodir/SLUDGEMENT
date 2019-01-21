@@ -12,11 +12,11 @@ class SpendingQueue():
         self.spending_queue = PriorityQueue()
         self.bot = bot
 
-        self.spending_queue.reprioritize(DRONE, 5)
-
         self.build_repository = BORepository(bot)
 
         build = self.build_repository.hatch_first()
+        if self.bot.enemy_race == Race.Zerg:
+            build = self.build_repository.pool_first_zvz()
         self.build_order_runner = BORunner(build)
 
 
@@ -29,8 +29,10 @@ class SpendingQueue():
     def iterate(self):
         if not self.build_order_runner.finished:
             unit_id: UnitTypeId = self.build_order_runner.iterate()
+            print(unit_id)
             if unit_id:
                 self.spending_queue.reprioritize(unit_id, 50)
+            print(self.spending_queue)
         else:
             self.update_hatchery_priority()
 
@@ -67,7 +69,7 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(OVERLORD, 40)
 
             if self.need_drone():
-                self.spending_queue.reprioritize(DRONE, 5)
+                self.spending_queue.reprioritize(ECO, 5)
             
             # TODO: Make mutas to deal with floating buildings
 

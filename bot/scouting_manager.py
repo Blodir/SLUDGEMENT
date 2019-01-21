@@ -31,6 +31,7 @@ class ScoutingManager():
                 self.unit_observations.append(UnitObservation(unit, ttl))
 
         # Update observed_enemy_units then remove old observations
+        # TODO: remove observations that are in vision, but dont exist
         temp: List[Unit] = []
         to_remove = []
         for observation in self.unit_observations:

@@ -166,8 +166,10 @@ class MyBot(sc2.BotAI):
         to_remove = []
         minerals_left = self.minerals
         vespene_left = self.vespene
+        larvae_left = self.units(LARVA).amount
         larvae = self.units(LARVA)
         for p in priorities:
+            construction_type = built_by(p)
             if minerals_left < 0:
                 minerals_left = 0
             if vespene_left < 0:
@@ -175,28 +177,30 @@ class MyBot(sc2.BotAI):
             if p == ARMY:
                 # make army until no larva remaining
                 cost = self.get_resource_value(LING)
-                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae.exists:
-                    action = await self.create_construction_action(LING)
+                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae_left > 0:
+                    action = await self.create_construction_action(LING, construction_type)
                     if action != None:
                         actions.append(action)
                     minerals_left -= cost[0]
                     vespene_left -= cost[1]
-            elif p == DRONE:
+                    larvae_left -= 1
+            elif p == ECO:
                 # make drone until no larva remaining
                 cost = self.get_resource_value(DRONE)
-                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae.exists:
-                    action = await self.create_construction_action(DRONE)
+                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae_left > 0:
+                    action = await self.create_construction_action(DRONE, construction_type)
                     if action != None:
                         actions.append(action)
                     minerals_left -= cost[0]
                     vespene_left -= cost[1]
+                    larvae_left -= 1
             else:
                 cost = self.get_resource_value(p)
                 if built_by(id) == ConstructionType.BUILDING:
                     # dont count lost drone in resource cost
                     cost = (cost[0] - 50, cost[1])
-                if minerals_left >= cost[0] and vespene_left >= cost[1]:
-                    action = await self.create_construction_action(p)
+                if minerals_left >= cost[0] and vespene_left >= cost[1] and (not construction_type == ConstructionType.FROM_LARVA or larvae_left > 0):
+                    action = await self.create_construction_action(p, construction_type)
                     if action != None:
                         to_remove.append(p)
                         actions.append(action)
@@ -205,14 +209,16 @@ class MyBot(sc2.BotAI):
                     pass
                 minerals_left -= cost[0]
                 vespene_left -= cost[1]
+                # TODO: FIX larva still not taken into account properly...??? bot is building drones when should be waiting for larva for lings
+                if construction_type == ConstructionType.FROM_LARVA:
+                    larvae_left -= 1
         for p in to_remove:
             # TODO: change logic to change priorities instead of removing stuff from queue in some cases?
             priorities.delete(p)
         return actions;
 
     # returns None if action could not be done
-    async def create_construction_action(self, id: UnitTypeId):
-        construction_type = built_by(id)
+    async def create_construction_action(self, id: UnitTypeId, construction_type: ConstructionType):
         if construction_type == ConstructionType.BUILDING:
             worker = self.select_build_worker(self.start_location)
             if worker is None:
