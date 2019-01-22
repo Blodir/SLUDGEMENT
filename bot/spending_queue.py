@@ -68,6 +68,10 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(ECO, 5)
             
             # TODO: Make mutas to deal with floating buildings
+            if self.scouting_manager.terran_floating_buildings:
+                if not self.bot.units(LAIR).exists or self.bot.already_pending(LAIR) or self.bot.units(HIVE).exists:
+                    self.spending_queue.reprioritize(LAIR, 25)
+
 
 
     def need_supply(self) -> bool:
@@ -95,7 +99,7 @@ class SpendingQueue():
 
     def need_queen(self) -> bool:
         queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
-        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount > queen_count + 1 and queen_count < 6
+        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount + 1 > queen_count and queen_count < 6
     
     def update_hatchery_priority(self):
         if self.need_hatchery():

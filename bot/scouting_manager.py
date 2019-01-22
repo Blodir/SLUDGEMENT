@@ -53,7 +53,7 @@ class ScoutingManager():
         self.enemy_townhall_count = temp_basecount
 
         # Estimate army values
-        self.estimated_enemy_army_value = self.bot.calculate_combat_value(self.observed_enemy_units.not_structure)
+        self.estimated_enemy_army_value = self.bot.calculate_combat_value(self.observed_enemy_units.not_structure.exclude_type({DRONE, OVERLORD, UnitTypeId.SCV, UnitTypeId.PROBE}))
         self.own_army_value = self.bot.calculate_combat_value(self.bot.units.not_structure.ready.filter(lambda u: u.type_id != DRONE and u.type_id != QUEEN))
 
         # Check for proxies
