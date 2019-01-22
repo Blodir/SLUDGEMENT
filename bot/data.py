@@ -16,10 +16,12 @@ HATCHERY = UnitTypeId.HATCHERY
 SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
 QUEEN = UnitTypeId.QUEEN
 EXTRACTOR = UnitTypeId.EXTRACTOR
+SPIRE = UnitTypeId.SPIRE
 LAIR = UnitTypeId.LAIR
 HIVE = UnitTypeId.HIVE
 
 LING = UnitTypeId.ZERGLING
+MUTALISK = UnitTypeId.MUTALISK
 
 MINERAL_FIELD = UnitTypeId.MINERALFIELD
 VESPENE_GEYSER = UnitTypeId.VESPENEGEYSER
@@ -37,14 +39,14 @@ class ConstructionType(enum.Enum):
     FROM_LARVA = 2
 
 def get_construction_type(unitId: UnitTypeId) -> ConstructionType:
-    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR:
+    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE:
         return ConstructionType.BUILDING
-    if unitId == QUEEN or unitId == LINGSPEED:
+    if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR:
         return ConstructionType.FROM_BUILDING
     return ConstructionType.FROM_LARVA
 
 def get_construction_building(id) -> UnitTypeId:
-    if id == QUEEN:
+    if id == QUEEN or id == LAIR:
         return HATCHERY
     if id == LINGSPEED:
         return SPAWNINGPOOL

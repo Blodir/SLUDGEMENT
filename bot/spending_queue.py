@@ -36,14 +36,14 @@ class SpendingQueue():
             if ((self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
                 self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
                 self.scouting_manager.enemy_proxies_exist)) and not self.scouting_manager.terran_floating_buildings:
-                self.spending_queue.reprioritize(ARMY, 39)
+                self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
             if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value and (
                 self.scouting_manager.observed_enemy_units.closer_than(50, self.bot.own_natural)
             ):
                 # panic queens if large army within 100 units of natural
-                self.spending_queue.reprioritize(QUEEN, 38)
+                self.spending_queue.reprioritize(QUEEN, 37)
             else:
                 self.spending_queue.reprioritize(QUEEN, 2)
 
@@ -69,8 +69,14 @@ class SpendingQueue():
             
             # TODO: Make mutas to deal with floating buildings
             if self.scouting_manager.terran_floating_buildings:
-                if not self.bot.units(LAIR).exists or self.bot.already_pending(LAIR) or self.bot.units(HIVE).exists:
-                    self.spending_queue.reprioritize(LAIR, 25)
+                self.spending_queue.reprioritize(ARMY, 1)
+                if not self.bot.units(LAIR).exists and not self.bot.lair_already_pending() and not self.bot.units(HIVE).exists:
+                    self.spending_queue.reprioritize(LAIR, 41)
+                if (self.bot.units(LAIR).exists or self.bot.units(HIVE).exists) and not self.bot.units(SPIRE).exists and not self.bot.already_pending(SPIRE):
+                    self.spending_queue.reprioritize(SPIRE, 41)
+                if self.bot.units(SPIRE).exists:
+                    self.spending_queue.reprioritize(MUTALISK, 39)
+                    
 
 
 
