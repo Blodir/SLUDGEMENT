@@ -80,7 +80,7 @@ class UnitManager():
         # KILL TERRAN BUILDINGS WITH MUTAS
         if self.scouting_manager.terran_floating_buildings:
             mutas: Units = self.bot.units(MUTALISK).tags_not_in(self.unselectable.tags)
-            pos: Point2 = self.bot.enemy_start_locations[0] + 15 * self.bot.start_location.direction_vector(self.bot.enemy_start_locations[0])
+            pos: Point2 = self.bot.enemy_start_locations[0] + 15 * self.bot._game_info.map_center.direction_vector(self.bot.enemy_start_locations[0])
             for muta in mutas:
                 actions.append(muta.attack(pos))
                 self.unselectable.append(muta)
