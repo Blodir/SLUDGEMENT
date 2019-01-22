@@ -5,6 +5,7 @@ import time
 import datetime
 import copy
 import random
+import asyncio
 
 from typing import Union
 from pathlib import Path
@@ -191,7 +192,7 @@ class MyBot(sc2.BotAI):
                     larvae_left -= 1
             else:
                 cost = self.get_resource_value(p)
-                if get_construction_type(id) == ConstructionType.BUILDING:
+                if get_construction_type(p) == ConstructionType.BUILDING:
                     # dont count lost drone in resource cost
                     cost = (cost[0] - 50, cost[1])
                 if minerals_left >= cost[0] and vespene_left >= cost[1] and (not construction_type == ConstructionType.FROM_LARVA or larvae_left > 0):

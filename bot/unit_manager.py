@@ -3,6 +3,7 @@ import math
 import random
 
 from sc2 import BotAI
+from sc2.client import Race
 from sc2.units import Units
 from sc2.unit import Unit
 from sc2.ids.ability_id import AbilityId
@@ -42,11 +43,12 @@ class UnitManager():
         # ASSIGN INJECT QUEENS
         # TODO: DONT DO THIS IF ENEMIES CLOSEBY
         for hatch in Units(self.bot.units(HATCHERY).take(4, False), self.bot._game_data).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
-            free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
-            if free_queens.exists:
-                queen = free_queens.random
-                self.inject_targets[hatch] = queen
-                self.unselectable.append(queen)
+            if not self.bot.known_enemy_units.closer_than(15, hatch.position):
+                free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
+                if free_queens.exists:
+                    queen = free_queens.random
+                    self.inject_targets[hatch] = queen
+                    self.unselectable.append(queen)
         
         # INJECT
         for hatch in self.inject_targets:
@@ -101,7 +103,23 @@ class UnitManager():
             if nearby_enemies and nearby_enemies.exists:
                 if group_value + self.bot.calculate_combat_value(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(15, group.center)) > enemy_value:
                     # attack enemy group
-                    actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.center))
+
+                    # ling micro
+                    microing_back_tags: List[int] = []
+                    if nearby_enemies(LING).exists:
+                        for unit in group(LING):
+                            local_enemies: Units = nearby_enemies.closer_than(3, unit.position)
+                            local_allies: Units = group.closer_than(3, unit.position)
+                            # TODO: use attack range instead of proximity... (if enemies cant attack they arent a threat)
+                            if (self.bot.calculate_combat_value(local_enemies) 
+                                > self.bot.calculate_combat_value(local_allies)
+                            ):
+                                target = unit.position + 5 * local_enemies.center.direction_vector(group.center)
+                                actions.append(unit.move(target))
+                                microing_back_tags.append(unit.tag)
+                                self.bot._client.debug_text_world(f'micro point', Point3((target.x, target.y, 10)), None, 12)
+                                self.bot._client.debug_text_world(f'microing back', Point3((unit.position.x, unit.position.y, 10)), None, 12)
+                    actions.extend(self.command_group(group.tags_not_in(set(microing_back_tags)), AbilityId.ATTACK, nearby_enemies.center))
                     self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
                 else:
                     # retreat somewhwere
@@ -150,7 +168,7 @@ class UnitManager():
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
                 defending_army: Units = all_army.closer_than(15, expansion)
                 if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
-                    for defender in self.bot.units(DRONE).closer_than(15, expansion).tags_not_in(self.unselectable.tags):
+                    for defender in self.bot.units(DRONE).closer_than(10, expansion).tags_not_in(self.unselectable.tags):
                         pos = defender.position
                         if expansion != self.bot.start_location:
                             self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
@@ -167,24 +185,25 @@ class UnitManager():
 
         # DEFEND CANNON RUSH WITH DRONES
 
-        for expansion in self.bot.owned_expansions:
-            enemy_scouting_workers = self.bot.known_enemy_units({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
-            enemy_proxies = self.bot.known_enemy_structures.closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
-            if enemy_proxies.exists:
-                for proxy in enemy_proxies:
-                    if proxy.type_id == UnitTypeId.PHOTONCANNON:
-                        for drone in self.bot.units(DRONE).tags_not_in(self.unselectable.tags).take(4, False):
-                            actions.append(drone.attack(proxy))
-                            self.unselectable.append(drone)
-                            self.unselectable_enemy_units.append(proxy)
-            if enemy_scouting_workers.exists:
-                for enemy_worker in enemy_scouting_workers:
-                    own_workers: Units = self.bot.units(DRONE).tags_not_in(self.unselectable.tags)
-                    if own_workers.exists:
-                        own_worker: Unit = own_workers.closest_to(enemy_worker)
-                        actions.append(own_worker.attack(enemy_worker))
-                        self.unselectable.append(own_worker)
-                        self.unselectable_enemy_units.append(enemy_worker)
+        if self.bot.enemy_race == Race.Protoss:
+            for expansion in self.bot.owned_expansions:
+                enemy_scouting_workers = self.bot.known_enemy_units({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+                enemy_proxies = self.bot.known_enemy_structures.closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+                if enemy_proxies.exists:
+                    for proxy in enemy_proxies:
+                        if proxy.type_id == UnitTypeId.PHOTONCANNON:
+                            for drone in self.bot.units(DRONE).tags_not_in(self.unselectable.tags).take(4, False):
+                                actions.append(drone.attack(proxy))
+                                self.unselectable.append(drone)
+                                self.unselectable_enemy_units.append(proxy)
+                if enemy_scouting_workers.exists:
+                    for enemy_worker in enemy_scouting_workers:
+                        own_workers: Units = self.bot.units(DRONE).tags_not_in(self.unselectable.tags)
+                        if own_workers.exists:
+                            own_worker: Unit = own_workers.closest_to(enemy_worker)
+                            actions.append(own_worker.attack(enemy_worker))
+                            self.unselectable.append(own_worker)
+                            self.unselectable_enemy_units.append(enemy_worker)
 
         # EXTRA QUEEN CONTROL
         extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)

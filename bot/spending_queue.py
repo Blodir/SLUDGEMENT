@@ -19,8 +19,6 @@ class SpendingQueue():
             build = self.build_repository.pool_first_zvz()
         self.build_order_runner = BORunner(build)
 
-
-
         self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 27
     
     def get_spending_queue(self):
@@ -29,10 +27,8 @@ class SpendingQueue():
     def iterate(self):
         if not self.build_order_runner.finished:
             unit_id: UnitTypeId = self.build_order_runner.iterate()
-            print(unit_id)
             if unit_id:
                 self.spending_queue.reprioritize(unit_id, 50)
-            print(self.spending_queue)
         else:
             self.update_hatchery_priority()
 
