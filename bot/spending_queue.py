@@ -19,7 +19,7 @@ class SpendingQueue():
             build = self.build_repository.pool_first_zvz()
         self.build_order_runner = BORunner(build)
 
-        self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 27
+        self.goal_drone_count_per_enemy_base = 24 if self.bot.enemy_race == Race.Zerg else 27
     
     def get_spending_queue(self):
         return self.spending_queue
@@ -33,8 +33,12 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             # Make army or drones ?
+            distance_factor = 1
+            observed_enemies = self.scouting_manager.observed_enemy_units
+            if observed_enemies.exists:
+                distance_factor = 1.05 - 0.001 * observed_enemies.closest_distance_to(self.bot.own_natural)
             if ((self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
-                self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
+                distance_factor * self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
                 self.scouting_manager.enemy_proxies_exist)) and not self.scouting_manager.terran_floating_buildings:
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
