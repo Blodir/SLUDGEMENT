@@ -110,9 +110,6 @@ class MyBot(sc2.BotAI):
         # UPDATE SPENDING QUEUE
         self.spending_queue.iterate()
 
-        # SPEND RESOURCES
-        actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
-
         # SET RALLY POINTS
         if math.floor(self.getTimeInSeconds()) % 10 == 0 and self.units(HATCHERY).not_ready.exists:
             for hatch in self.units(HATCHERY).not_ready:
@@ -129,6 +126,10 @@ class MyBot(sc2.BotAI):
         elif self.units(DRONE).idle.exists:
             await self.distribute_workers()
         
+        # SPEND RESOURCES
+        # do after army management so unselectable units arent overwritten
+        actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
+
         # EXECUTE ACTIONS
         await self.do_actions(actions)
 
@@ -292,9 +293,6 @@ class MyBot(sc2.BotAI):
         for unit in units.filter(lambda u: u.can_attack_ground):
             if unit.type_id == DRONE or unit.type_id == UnitTypeId.PROBE or unit.type_id == UnitTypeId.SCV:
                 resources = (10, 0)
-            elif unit.type_id == UnitTypeId.STALKER:
-                # HACK vs sharpened edge
-                resources = (100, 50)
             else:
                 resources = self.get_resource_value(unit.type_id)
             minerals = resources[0]
