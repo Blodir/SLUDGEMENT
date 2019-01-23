@@ -16,8 +16,7 @@ class SpendingQueue():
 
         build = self.build_repository.hatch_first()
         if self.bot.enemy_race == Race.Zerg:
-            # build = self.build_repository.pool_first_zvz()
-            pass
+            build = self.build_repository.pool_first_zvz()
         self.build_order_runner = BORunner(build)
 
         self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 27
