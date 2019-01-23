@@ -292,7 +292,7 @@ class MyBot(sc2.BotAI):
         for unit in units.filter(lambda u: u.can_attack_ground):
             if unit.type_id == DRONE or unit.type_id == UnitTypeId.PROBE or unit.type_id == UnitTypeId.SCV:
                 resources = (10, 0)
-            elif unit.type_id == STALKER:
+            elif unit.type_id == UnitTypeId.STALKER:
                 # HACK vs sharpened edge
                 resources = (100, 50)
             else:
