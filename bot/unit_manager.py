@@ -229,14 +229,14 @@ class UnitManager():
                             self.unselectable_enemy_units.append(enemy_worker)
 
         # EXTRA QUEEN CONTROL
-        extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags).tags_not_in(self.inject_queens.tags)
+        extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
         # if there's a fight contribute otherwise make creep tumors
         if extra_queens.exists:
             if self.bot.known_enemy_units.exists and self.bot.units.closer_than(20, extra_queens.center).tags_not_in(extra_queens.tags).filter(lambda u: u.is_attacking).exists and self.bot.known_enemy_units.closer_than(20, extra_queens.center).exists:
                 actions.extend(self.command_group(extra_queens, AbilityId.ATTACK, self.bot.known_enemy_units.closest_to(extra_queens.center).position))
                 self.bot._client.debug_text_world(f'queen attack', Point3((extra_queens.center.x, extra_queens.center.y, 10)), None, 12)
             else:
-                for queen in extra_queens:
+                for queen in extra_queens.tags_not_in(self.inject_queens.tags):
                     if queen.is_idle:
                         abilities = await self.bot.get_available_abilities(queen)
                         position = await self.bot.find_tumor_placement()
