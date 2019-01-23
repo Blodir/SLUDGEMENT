@@ -26,7 +26,6 @@ class SpendingQueue():
         return self.spending_queue
     
     def iterate(self):
-        print(self.spending_queue)
         if not self.build_order_runner.finished:
             unit_id: UnitTypeId = self.build_order_runner.iterate()
             if unit_id:
