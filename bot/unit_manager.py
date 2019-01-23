@@ -9,6 +9,7 @@ from sc2.unit import Unit
 from sc2.ids.ability_id import AbilityId
 from sc2.unit_command import UnitCommand
 from sc2.position import Point2, Point3, Rect
+from sc2.pixel_map import PixelMap
 
 from .scouting_manager import ScoutingManager
 
@@ -83,9 +84,9 @@ class UnitManager():
             pos: Point2 = self.bot.enemy_start_locations[0] + 15 * self.bot._game_info.map_center.direction_vector(self.bot.enemy_start_locations[0])
             corners = [
                 Point2((0, 0)),
-                Point2((self.bot._game_info.map_size.height- 1, 0)),
-                Point2((self.bot._game_info.map_size.height- 1, self.bot._game_info.map_size.width- 1)),
-                Point2((0,self.bot._game_info.map_size.width- 1)),
+                Point2((self.bot._game_info.pathing_grid.width - 1, 0)),
+                Point2((self.bot._game_info.pathing_grid.width - 1, self.bot._game_info.pathing_grid.height - 1)),
+                Point2((0,self.bot._game_info.pathing_grid.height- 1)),
                 Point2((0, 0))
             ]
             for muta in mutas:
