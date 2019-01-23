@@ -58,7 +58,7 @@ class UnitManager():
             inject_queen = self.inject_targets[hatch]
             if inject_queen:
                 abilities = await self.bot.get_available_abilities(inject_queen)
-                if AbilityId.EFFECT_INJECTLARVA in abilities:
+                if abilities and len(abilities) > 0 and AbilityId.EFFECT_INJECTLARVA in abilities:
                     actions.append(inject_queen(AbilityId.EFFECT_INJECTLARVA, hatch))
                 else:
                     # move to hatch
