@@ -64,6 +64,7 @@ class MyBot(sc2.BotAI):
 
     async def on_unit_destroyed(self, unit_tag):
         # remove destroyed unit from scouted units
+        # TODO: REMVOE INJECT QUEEN FROM unit manager
         self.scouting_manager.remove_observation(unit_tag)
         if self.unit_manager.unselectable.tags_in({unit_tag}).exists:
             self.unit_manager.unselectable = self.unit_manager.unselectable.tags_not_in({unit_tag})
@@ -361,3 +362,13 @@ class MyBot(sc2.BotAI):
             if target_position.distance_to(expansion) < 6:
                 res = True
         return res
+    
+    def find_closest_n_from_units(self, position:Point2, n, units: Units):
+        temp: Units = units
+        output: Units = Units([], self._game_data)
+        for idx in range(n):
+            if temp.exists:
+                closest = temp.closest_to(position)
+                temp = temp.tags_not_in({closest.tag})
+                output.append(closest)
+        return output

@@ -16,7 +16,8 @@ class SpendingQueue():
 
         build = self.build_repository.hatch_first()
         if self.bot.enemy_race == Race.Zerg:
-            build = self.build_repository.pool_first_zvz()
+            # build = self.build_repository.pool_first_zvz()
+            pass
         self.build_order_runner = BORunner(build)
 
         self.goal_drone_count_per_enemy_base = 22 if self.bot.enemy_race == Race.Zerg else 27
@@ -25,6 +26,7 @@ class SpendingQueue():
         return self.spending_queue
     
     def iterate(self):
+        print(self.spending_queue)
         if not self.build_order_runner.finished:
             unit_id: UnitTypeId = self.build_order_runner.iterate()
             if unit_id:
@@ -55,7 +57,7 @@ class SpendingQueue():
             if self.bot.units(LING).amount < 4 and self.bot.units(SPAWNINGPOOL).exists:
                 self.spending_queue.reprioritize(LING, 32)
 
-            if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades:
+            if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades and not self.bot.already_pending(LINGSPEED):
                 self.spending_queue.reprioritize(LINGSPEED, 31)
 
             if self.need_spawningpool():

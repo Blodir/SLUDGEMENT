@@ -24,6 +24,7 @@ class UnitManager():
         self.unselectable_enemy_units = Units([], self.bot._game_data)
         self.scouting_ttl = 300
         self.inject_targets: Dict[Unit, Unit] = {}
+        self.inject_queens: Units = Units([], self.bot._game_data)
 
     async def iterate(self, iteration):
         self.scouting_ttl -= 1
@@ -40,19 +41,20 @@ class UnitManager():
             pos = observed_enemy.position
             self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
 
-
         # ASSIGN INJECT QUEENS
         # TODO: DONT DO THIS IF ENEMIES CLOSEBY
-        for hatch in Units(self.bot.units(HATCHERY).take(4, False), self.bot._game_data).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys()))):
-            if not self.bot.known_enemy_units.closer_than(15, hatch.position):
-                free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
-                if free_queens.exists:
-                    queen = free_queens.random
-                    self.inject_targets[hatch] = queen
-                    self.unselectable.append(queen)
+        hatches = self.bot.find_closest_n_from_units(self.bot.start_location, 4, self.bot.units(HATCHERY)).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys())))
+        for hatch in hatches:
+            free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags).tags_not_in(self.inject_queens.tags)
+            if free_queens.exists:
+                queen = free_queens.random
+                self.inject_targets[hatch] = queen
+                self.inject_queens.append(queen)
         
         # INJECT
         for hatch in self.inject_targets:
+            if self.bot.known_enemy_units.closer_than(15, hatch).exists:
+                continue
             inject_queen = self.inject_targets[hatch]
             abilities = await self.bot.get_available_abilities(inject_queen)
             if AbilityId.EFFECT_INJECTLARVA in abilities:
@@ -101,7 +103,7 @@ class UnitManager():
         to_remove = []
         for unit in self.unselectable:
             self.bot._client.debug_text_world(f'unselectable', Point3((unit.position.x, unit.position.y, 10)), None, 12)
-            if (unit.is_idle and not unit.tag in map(lambda q: q.tag, self.inject_targets.values())) or unit.is_gathering or not unit.is_visible:
+            if unit.is_idle or unit.is_gathering or not unit.is_visible:
                 to_remove.append(unit.tag)
         self.unselectable = self.unselectable.tags_not_in(set(to_remove))
 
@@ -224,7 +226,7 @@ class UnitManager():
                             self.unselectable_enemy_units.append(enemy_worker)
 
         # EXTRA QUEEN CONTROL
-        extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
+        extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags).tags_not_in(self.inject_queens.tags)
         # if there's a fight contribute otherwise make creep tumors
         if extra_queens.exists:
             if self.bot.known_enemy_units.exists and self.bot.units.closer_than(20, extra_queens.center).tags_not_in(extra_queens.tags).filter(lambda u: u.is_attacking).exists and self.bot.known_enemy_units.closer_than(20, extra_queens.center).exists:
