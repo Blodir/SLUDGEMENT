@@ -19,7 +19,7 @@ def main():
 
     run_game(maps.get("Catalyst LE"), [
         Bot(race, MyBot()),
-        Bot(Race.Protoss,WarpGateBot())
+        Bot(Race.Terran, ProxyRaxBot())
     ], realtime=False, step_time_limit=2, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
 
 if __name__ == '__main__':

@@ -56,12 +56,15 @@ class UnitManager():
             if self.bot.known_enemy_units.closer_than(15, hatch).exists:
                 continue
             inject_queen = self.inject_targets[hatch]
-            abilities = await self.bot.get_available_abilities(inject_queen)
-            if AbilityId.EFFECT_INJECTLARVA in abilities:
-                actions.append(inject_queen(AbilityId.EFFECT_INJECTLARVA, hatch))
+            if inject_queen:
+                abilities = await self.bot.get_available_abilities(inject_queen)
+                if AbilityId.EFFECT_INJECTLARVA in abilities:
+                    actions.append(inject_queen(AbilityId.EFFECT_INJECTLARVA, hatch))
+                else:
+                    # move to hatch
+                    pass
             else:
-                # move to hatch
-                pass
+                del self.inject_targets[hatch]
 
         # SCOUTING
 
