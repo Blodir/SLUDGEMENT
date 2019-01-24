@@ -36,7 +36,7 @@ class SpendingQueue():
             if self.scouting_manager.observed_enemy_units.exists:
                 closest_distance = self.scouting_manager.observed_enemy_units.closest_distance_to(self.bot.own_natural)
                 if closest_distance > 100:
-                    distance_multiplier = 0.5
+                    distance_multiplier = 0.7
                 elif closest_distance > 90:
                     distance_multiplier = 0.8
                 elif closest_distance < 20:
