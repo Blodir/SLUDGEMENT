@@ -168,7 +168,7 @@ class UnitManager():
                         actions.extend(self.command_group(group, AbilityId.MOVE, move_position))
                         self.bot._client.debug_text_world(f'retreating', Point3((group.center.x, group.center.y, 10)), None, 12)
             else:
-                if group_value > 1.2 * estimated_enemy_value:
+                if group_value > 1.2 * estimated_enemy_value or self.bot.supply_used >= 180:
                     # attack toward closest enemy buildings
                     attack_position = self.bot.enemy_start_locations[0]
                     observed_structures = self.scouting_manager.observed_enemy_units.structure
