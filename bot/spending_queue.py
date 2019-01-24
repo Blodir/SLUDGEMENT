@@ -52,20 +52,22 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
+            
+            queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
             if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value and (
                 self.scouting_manager.observed_enemy_units.closer_than(50, self.bot.own_natural)
             ):
                 # panic queens if large army within 100 units of natural
                 self.spending_queue.reprioritize(QUEEN, 37)
+            elif self.need_queen():
+                self.spending_queue.reprioritize(QUEEN, 21)
+            elif self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount + 1 > queen_count and queen_count < 6:
+                self.spending_queue.reprioritize(QUEEN, 5)
             else:
                 self.spending_queue.reprioritize(QUEEN, 2)
 
-            # Make inject queens
-            if self.need_queen():
-                self.spending_queue.reprioritize(QUEEN, 21)
-
             # Always have some lings out
-            if self.bot.units(LING).amount < 4 and self.bot.units(SPAWNINGPOOL).exists:
+            if self.bot.units(LING).amount + self.bot.already_pending(LING) < 4 and self.bot.units(SPAWNINGPOOL).exists:
                 self.spending_queue.reprioritize(LING, 32)
 
             if self.bot.units(SPAWNINGPOOL).exists and not LINGSPEED in self.bot.state.upgrades and not self.bot.already_pending(LINGSPEED):
@@ -78,7 +80,7 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(OVERLORD, 40)
 
             if self.need_drone():
-                self.spending_queue.reprioritize(ECO, 5)
+                self.spending_queue.reprioritize(ECO, 6)
             else:
                 self.spending_queue.reprioritize(ECO, 0)
             
@@ -120,7 +122,7 @@ class SpendingQueue():
 
     def need_queen(self) -> bool:
         queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
-        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount + 1 > queen_count and queen_count < 6
+        return self.bot.units(SPAWNINGPOOL).exists and self.bot.units(HATCHERY).amount > queen_count and queen_count < 6
     
     def update_hatchery_priority(self):
         if self.need_hatchery():
