@@ -32,7 +32,7 @@ class UnitManager():
         actions: List[UnitCommand] = []
 
         all_army: Units = self.bot.units.exclude_type({OVERLORD, DRONE, QUEEN, LARVA, EGG}).not_structure.ready
-        observed_enemy_army = self.scouting_manager.observed_enemy_units.filter(lambda u: u.can_attack_ground)
+        observed_enemy_army = self.scouting_manager.observed_enemy_units.filter(lambda u: u.can_attack_ground or u.type_id == UnitTypeId.BUNKER)
         estimated_enemy_value = self.scouting_manager.estimated_enemy_army_value
 
         army_units = all_army
