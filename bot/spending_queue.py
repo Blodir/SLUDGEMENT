@@ -79,6 +79,8 @@ class SpendingQueue():
 
             if self.need_drone():
                 self.spending_queue.reprioritize(ECO, 5)
+            else:
+                self.spending_queue.reprioritize(ECO, 0)
             
             # TODO: Make mutas to deal with floating buildings
             if self.scouting_manager.terran_floating_buildings:
