@@ -32,14 +32,23 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
+            distance_multiplier = 1
+            if self.scouting_manager.observed_enemy_units.exists:
+                closest_distance = self.scouting_manager.observed_enemy_units.closest_distance_to(self.bot.own_natural)
+                if closest_distance > 100:
+                    distance_multiplier = 0.5
+                elif closest_distance > 90:
+                    distance_multiplier = 0.8
+                elif closest_distance < 20:
+                    distance_multiplier = 1.2
+
+            self.bot._client.debug_text_screen(f'Distance multiplier: {distance_multiplier}', (0, 0), None, 8)
+
             # Make army or drones ?
-            distance_factor = 1
-            observed_enemies = self.scouting_manager.observed_enemy_units
-            if observed_enemies.exists:
-                distance_factor = 1.05 - 0.001 * observed_enemies.closest_distance_to(self.bot.own_natural)
-            if ((self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count or (
-                distance_factor * self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
-                self.scouting_manager.enemy_proxies_exist)) and not self.scouting_manager.terran_floating_buildings:
+            # (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count
+            if (
+                distance_multiplier * self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
+                self.scouting_manager.enemy_proxies_exist) and not self.scouting_manager.terran_floating_buildings:
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
