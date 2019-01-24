@@ -293,6 +293,8 @@ class MyBot(sc2.BotAI):
         for unit in units.filter(lambda u: u.can_attack_ground):
             if unit.type_id == DRONE or unit.type_id == UnitTypeId.PROBE or unit.type_id == UnitTypeId.SCV:
                 resources = (10, 0)
+            elif unit.type_id == UnitTypeId.BUNKER:
+                resources = (300, 0)
             else:
                 resources = self.get_resource_value(unit.type_id)
             minerals = resources[0]
