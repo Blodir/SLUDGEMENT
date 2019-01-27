@@ -28,6 +28,7 @@ from .spending_queue import SpendingQueue
 from .unit_manager import UnitManager
 from .scouting_manager import ScoutingManager
 from .data import *
+from .spending_helper import optimal_combination
 
 # Bots are created as classes and they need to have on_step method defined.
 # Do not change the name of the class!
@@ -174,14 +175,16 @@ class MyBot(sc2.BotAI):
                 vespene_left = 0
             if p == ARMY:
                 # make army until no larva remaining
-                cost = self.get_resource_value(LING)
-                while minerals_left >= cost[0] and vespene_left >= cost[1] and larvae_left > 0:
-                    action = await self.create_construction_action(LING, construction_type)
-                    if action != None:
-                        actions.append(action)
-                    minerals_left -= cost[0]
-                    vespene_left -= cost[1]
-                    larvae_left -= 1
+                optimal = optimal_combination([minerals_left, vespene_left, larvae_left], [[50, 0, 1]])
+                if optimal:
+                    for i in range(optimal[0]):
+                        action = await self.create_construction_action(LING, ConstructionType.FROM_LARVA)
+                        if action != None:
+                            actions.append(action)
+                            minerals_left -= 50
+                            vespene_left -= 0
+                            larvae_left -= 1
+
             elif p == ECO:
                 # make drone until no larva remaining
                 cost = self.get_resource_value(DRONE)

@@ -75,6 +75,9 @@ class SpendingQueue():
 
             if self.need_spawningpool():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
+            
+            if self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32 and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
+                self.spending_queue.reprioritize(ROACHWARREN, 30)
 
             if self.need_supply():
                 self.spending_queue.reprioritize(OVERLORD, 40)
