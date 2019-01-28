@@ -105,34 +105,55 @@ class MyBot(sc2.BotAI):
             await self.do_actions(actions)
             return
 
+        scout_start_time = time.time()
         # SCOUT
         self.scouting_manager.iterate()
+        execution_time = (time.time() - scout_start_time) * 1000
+        print(f'Scouting: {round(execution_time, 3)}ms')
 
+        spending_start_time = time.time()
         # UPDATE SPENDING QUEUE
         self.spending_queue.iterate()
+        execution_time = (time.time() - spending_start_time) * 1000
+        print(f'Spending: {round(execution_time, 3)}ms')
 
+        rally_start_time = time.time()
         # SET RALLY POINTS
         if math.floor(self.getTimeInSeconds()) % 10 == 0 and self.units(HATCHERY).not_ready.exists:
             for hatch in self.units(HATCHERY).not_ready:
                 mineral_field = self.state.mineral_field.closest_to(hatch.position)
                 actions.append(hatch(AbilityId.RALLY_HATCHERY_WORKERS, mineral_field))
+        execution_time = (time.time() - rally_start_time) * 1000
+        print(f'Rally: {round(execution_time, 3)}ms')
 
+        army_start_time = time.time()
         # MANAGE ARMY (order matters, manage army before worker redistribution to fix bug with unselectable units)
         actions.extend(await self.unit_manager.iterate(iteration))
+        execution_time = (time.time() - army_start_time) * 1000
+        print(f'Army: {round(execution_time, 3)}ms')
 
+        distribution_start_time = time.time()
         # REDISTRIBUTE WORKERS
         oversaturated_bases = self.units(HATCHERY).filter(lambda h: h.surplus_harvesters > 2)
         if oversaturated_bases.exists:
             await self.distribute_workers()
         elif self.units(DRONE).idle.exists:
             await self.distribute_workers()
+        execution_time = (time.time() - distribution_start_time) * 1000
+        print(f'Redistribute: {round(execution_time, 3)}ms')
         
+        spend_action_start_time = time.time()
         # SPEND RESOURCES
         # do after army management so unselectable units arent overwritten
         actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
+        execution_time = (time.time() - spend_action_start_time) * 1000
+        print(f'Spend Action: {round(execution_time, 3)}ms')
 
+        action_exec_start_time = time.time()
         # EXECUTE ACTIONS
         await self.do_actions(actions)
+        execution_time = (time.time() - action_exec_start_time) * 1000
+        print(f'Action Exec: {round(execution_time, 3)}ms')
 
         # SEND DEBUG
         # self._client.debug_text_simple(f"Own army value: {self.scouting_manager.own_army_value}")

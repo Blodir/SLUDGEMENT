@@ -1,6 +1,7 @@
 from typing import List, Union, Dict
 import math
 import random
+import time
 
 from sc2 import BotAI
 from sc2.client import Race
@@ -25,6 +26,7 @@ class UnitManager():
         self.scouting_ttl = 300
         self.inject_targets: Dict[Unit, Unit] = {}
         self.inject_queens: Units = Units([], self.bot._game_data)
+        self.dead_tumors: Units = Units([], self.bot._game_data)
 
     async def iterate(self, iteration):
         self.scouting_ttl -= 1
@@ -113,6 +115,7 @@ class UnitManager():
                 to_remove.append(unit.tag)
         self.unselectable = self.unselectable.tags_not_in(set(to_remove))
 
+        groups_start_time = time.time()
         # ARMY GROUPS
 
         groups: List[Units] = self.group_army(army_units.tags_not_in(self.unselectable.tags))
@@ -189,6 +192,8 @@ class UnitManager():
                         self.bot._client.debug_text_world(f'merging', Point3((group.center.x, group.center.y, 10)), None, 12)
                     else:
                         self.bot._client.debug_text_world(f'idle', Point3((group.center.x, group.center.y, 10)), None, 12)
+        execution_time = (time.time() - groups_start_time) * 1000
+        print(f'//// Groups: {round(execution_time, 3)}ms')
 
         # DRONE DEFENSE
         for expansion in self.bot.owned_expansions:
@@ -234,6 +239,7 @@ class UnitManager():
                             self.unselectable.append(own_worker)
                             self.unselectable_enemy_units.append(enemy_worker)
 
+        extra_queen_start_time = time.time()
         # EXTRA QUEEN CONTROL
         extra_queens = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags)
         # if there's a fight contribute otherwise make creep tumors
@@ -253,20 +259,25 @@ class UnitManager():
                             if queen.position.distance_to(extra_queens.center) > 2:
                                 # regroup extra queens
                                 actions.append(queen.move(extra_queens.center))
+        execution_time = (time.time() - extra_queen_start_time) * 1000
+        print(f'//// Extra queens: {round(execution_time, 3)}ms')
 
+        creep_start_time = time.time()
         # CREEP TUMORS
-        for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED):
+        for tumor in self.bot.units(UnitTypeId.CREEPTUMORBURROWED).tags_not_in(self.dead_tumors.tags):
             # TODO: direct creep spread to some direction...
             # Dont overmake creep xd
-            # TODO: Dont block hatch positions
             abilities = await self.bot.get_available_abilities(tumor)
-            angle = random.randint(0, 360)
-            x = math.cos(angle)
-            y = math.sin(angle)
-            position: Point2 = tumor.position + (9 * Point2((x, y)))
-            if not self.bot.units(UnitTypeId.CREEPTUMORBURROWED).closer_than(9, position).exists and not self.bot.position_blocks_expansion(position):
-                if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
+            if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
+                angle = random.randint(0, 360)
+                x = math.cos(angle)
+                y = math.sin(angle)
+                position: Point2 = tumor.position + (9 * Point2((x, y)))
+                if self.bot.has_creep(position) and not self.bot.units(UnitTypeId.CREEPTUMORBURROWED).closer_than(9, position).exists and not self.bot.position_blocks_expansion(position):
                     actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
+                    self.dead_tumors.append(tumor)
+        execution_time = (time.time() - creep_start_time) * 1000
+        print(f'//// Creep: {round(execution_time, 3)}ms')
 
         # OVERLORD retreat from enemy structures
         for overlord in self.bot.units(UnitTypeId.OVERLORD):
