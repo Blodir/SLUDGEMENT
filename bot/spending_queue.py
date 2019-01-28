@@ -33,6 +33,7 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             distance_multiplier = 1
+            # TODO: consider enemy unit speed
             if self.scouting_manager.observed_enemy_units.exists:
                 closest_distance = self.scouting_manager.observed_enemy_units.closest_distance_to(self.bot.own_natural)
                 if closest_distance > 100:

@@ -175,15 +175,30 @@ class MyBot(sc2.BotAI):
                 vespene_left = 0
             if p == ARMY:
                 # make army until no larva remaining
-                optimal = optimal_combination([minerals_left, vespene_left, larvae_left], [[50, 0, 1]])
+                army_unit_ids = []
+                if self.units(SPAWNINGPOOL).exists:
+                    army_unit_ids.append(LING)
+                if self.units(ROACHWARREN).exists:
+                    army_unit_ids.append(ROACH)
+
+                if not army_unit_ids:
+                    continue
+
+                army_unit_resource_values = []
+                for unit_id in army_unit_ids:
+                    cost = self.get_resource_value_full(unit_id)
+                    army_unit_resource_values.append(list(cost))
+
+                optimal = optimal_combination([minerals_left, vespene_left, larvae_left], army_unit_resource_values)
                 if optimal:
-                    for i in range(optimal[0]):
-                        action = await self.create_construction_action(LING, ConstructionType.FROM_LARVA)
-                        if action != None:
-                            actions.append(action)
-                            minerals_left -= 50
-                            vespene_left -= 0
-                            larvae_left -= 1
+                    for idx, o in enumerate(optimal):
+                        for i in range(o):
+                            action = await self.create_construction_action(army_unit_ids[idx], ConstructionType.FROM_LARVA)
+                            if action != None:
+                                actions.append(action)
+                                minerals_left -= army_unit_resource_values[idx][0]
+                                vespene_left -= army_unit_resource_values[idx][1]
+                                larvae_left -= 1
 
             elif p == ECO:
                 # make drone until no larva remaining
@@ -290,6 +305,15 @@ class MyBot(sc2.BotAI):
     def get_resource_value(self, id: UnitTypeId) -> (int, int):
         unitData: UnitTypeData = self._game_data.units[id.value]
         return (unitData.cost.minerals, unitData.cost.vespene)
+
+    def get_resource_value_full(self, id: UnitTypeId) -> (int, int, int):
+        # TODO: consider larva, roach amount (if making ravagers), other stuff like that
+        unitData: UnitTypeData = self._game_data.units[id.value]
+        if id == LING:
+            output = (unitData.cost.minerals * 2, unitData.cost.vespene, 1)
+        else:
+            output = (unitData.cost.minerals, unitData.cost.vespene, 1)
+        return output
     
     def calculate_combat_value(self, units: Units):
         value = 0
