@@ -268,7 +268,11 @@ class UnitManager():
                 if AbilityId.BUILD_CREEPTUMOR_TUMOR in abilities:
                     actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
 
-
+        # OVERLORD retreat from enemy structures
+        for overlord in self.bot.units(UnitTypeId.OVERLORD):
+            if self.bot.known_enemy_structures.closer_than(15, overlord):
+                destination: Point2 = overlord.position + 4 * overlord.position.direction_vector(self.bot.own_natural)
+                actions.append(overlord.move(destination))
 
 
 
