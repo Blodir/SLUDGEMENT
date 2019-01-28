@@ -61,9 +61,10 @@ class ScoutingManager():
 
         # Check for proxies
         self.enemy_proxies_exist = False
-        if self.observed_enemy_units.structure.exists:
+        self.observed_enemy_structures = self.observed_enemy_units.structure
+        if self.observed_enemy_structures.exists:
             for expansion in self.bot.owned_expansions:
-                if self.observed_enemy_units.structure.closer_than(80, expansion).exists:
+                if self.observed_enemy_structures.closer_than(60, expansion).exists:
                     self.enemy_proxies_exist = True
         
         self.enemy_raiders = self.get_enemy_raiders()

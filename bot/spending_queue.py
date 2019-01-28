@@ -116,7 +116,7 @@ class SpendingQueue():
         return time_until_supplyblock < overlord_buildtime
 
     def need_drone(self) -> bool:
-        return self.bot.units(DRONE).amount < 80
+        return self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount < 80
 
     def need_hatchery(self) -> bool:
         return self.bot.units(DRONE).amount > (self.bot.units(HATCHERY).amount * LARVA_RATE_PER_INJECT) and not self.bot.already_pending(HATCHERY)
