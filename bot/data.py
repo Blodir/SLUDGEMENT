@@ -20,6 +20,7 @@ EXTRACTOR = UnitTypeId.EXTRACTOR
 SPIRE = UnitTypeId.SPIRE
 LAIR = UnitTypeId.LAIR
 HIVE = UnitTypeId.HIVE
+EVO = UnitTypeId.EVOLUTIONCHAMBER
 
 LING = UnitTypeId.ZERGLING
 ROACH = UnitTypeId.ROACH
@@ -30,6 +31,14 @@ VESPENE_GEYSER = UnitTypeId.VESPENEGEYSER
 SPACEPLATFORMGEYSER = UnitTypeId.SPACEPLATFORMGEYSER
 
 LINGSPEED = UpgradeId.ZERGLINGMOVEMENTSPEED
+ROACHSPEED = UpgradeId.GLIALRECONSTITUTION
+
+MISSILE1 = UpgradeId.ZERGMISSILEWEAPONSLEVEL1
+MISSILE2 = UpgradeId.ZERGMISSILEWEAPONSLEVEL2
+MISSILE3 = UpgradeId.ZERGMISSILEWEAPONSLEVEL3
+CARAPACE1 = UpgradeId.ZERGGROUNDARMORSLEVEL1
+CARAPACE2 = UpgradeId.ZERGGROUNDARMORSLEVEL2
+CARAPACE3 = UpgradeId.ZERGGROUNDARMORSLEVEL3
 
 # Larva per minute from an injected hatch
 LARVA_RATE_PER_INJECT = 11.658
@@ -41,9 +50,15 @@ class ConstructionType(enum.Enum):
     FROM_LARVA = 2
 
 def get_construction_type(unitId: UnitTypeId) -> ConstructionType:
-    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE or unitId == ROACHWARREN:
+    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE or unitId == ROACHWARREN or unitId == EVO:
         return ConstructionType.BUILDING
-    if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR:
+    if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR or unitId == ROACHSPEED or (
+        unitId==MISSILE1) or (
+        unitId==MISSILE2) or (
+        unitId==MISSILE3) or (
+        unitId==CARAPACE1) or (
+        unitId==CARAPACE2) or (
+        unitId==CARAPACE3):
         return ConstructionType.FROM_BUILDING
     return ConstructionType.FROM_LARVA
 
@@ -52,6 +67,15 @@ def get_construction_building(id) -> UnitTypeId:
         return HATCHERY
     if id == LINGSPEED:
         return SPAWNINGPOOL
+    if id == ROACHSPEED:
+        return ROACHWARREN
+    if id == MISSILE1 or (
+       id == MISSILE2) or (
+       id == MISSILE3) or (
+       id == CARAPACE1) or (
+       id == CARAPACE2) or (
+       id == CARAPACE3):
+       return EVO
     return None
 
 def is_townhall(id: UnitTypeId) -> bool:

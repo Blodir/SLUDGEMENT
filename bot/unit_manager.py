@@ -353,7 +353,7 @@ class UnitManager():
 
         corrected_own_value = self.bot.calculate_combat_value(own_units)
 
-        if own_ranged_value < enemy_ranged_value:
+        if own_ranged_value < enemy_ranged_value and own_units.exists:
             perimeter = self.get_enemy_perimeter(enemy_units.not_structure, self.bot.known_enemy_structures, own_units.center)
             if own_melee.exists:
                 own_melee_value = self.bot.calculate_combat_value(Units(own_melee.take(perimeter * 2, require_all=False), self.bot._game_data))

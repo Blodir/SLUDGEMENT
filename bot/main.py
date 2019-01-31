@@ -273,10 +273,8 @@ class MyBot(sc2.BotAI):
                     geysers = self.get_own_geysers()
                     for geyser in geysers:
                         if await self.can_place(EXTRACTOR,geyser.position):
-                            print('can place !!!')
                             structure_position = geyser
                             break
-                        print('CANT PLACE')
                 else:
                     structure_position = await self.find_building_placement(id)
                 if structure_position:
@@ -312,7 +310,7 @@ class MyBot(sc2.BotAI):
 
     async def saturate_gas(self, unit: Unit):
         actions = []
-        for drone in self.units(DRONE).closer_than(15, unit.position).take(3):
+        for drone in self.units(DRONE).closer_than(15, unit.position).take(3, require_all = False):
             actions.append(drone.gather(unit))
         await self.do_actions(actions)
 

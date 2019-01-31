@@ -1,16 +1,15 @@
-# This error is reached only in lategame at like 18mins in vs team tapiiri
-
-AI step threw an error
+ERROR:sc2.main:AI step threw an error
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.6/dist-packages/sc2/main.py", line 143, in _play_game_ai
-    await ai.on_step(iteration)
-  File "/app/repo0/bot/main.py", line 123, in on_step
-    actions.extend(await self.unit_manager.iterate(iteration))
-  File "/app/repo0/bot/unit_manager.py", line 52, in iterate
-    abilities = await self.bot.get_available_abilities(inject_queen)
-  File "/usr/local/lib/python3.6/dist-packages/sc2/bot_ai.py", line 135, in get_available_abilities
-    return await self._client.query_available_abilities(units, ignore_resource_requirements)
-  File "/usr/local/lib/python3.6/dist-packages/sc2/client.py", line 263, in query_available_abilities
-    return [[AbilityId(a.ability_id) for a in b.abilities] for b in result.query.abilities][0]
-IndexError: list index out of range
-resigning due to previous error
+  File "C:\Users\Pyry\AppData\Local\Programs\Python\Python37\lib\site-packages\sc2\main.py", line 118, in _play_game_ai
+    await ai.issue_events()
+  File "C:\Users\Pyry\AppData\Local\Programs\Python\Python37\lib\site-packages\sc2\bot_ai.py", line 549, in issue_events
+    await self._issue_building_complete_event(unit)
+  File "C:\Users\Pyry\AppData\Local\Programs\Python\Python37\lib\site-packages\sc2\bot_ai.py", line 566, in _issue_building_complete_event
+    await self.on_building_construction_complete(unit)
+  File "C:\Users\Pyry\Documents\GitLab\sludgement\bot\main.py", line 85, in on_building_construction_complete
+    await self.saturate_gas(unit)
+  File "C:\Users\Pyry\Documents\GitLab\sludgement\bot\main.py", line 315, in saturate_gas
+    for drone in self.units(DRONE).closer_than(15, unit.position).take(3):
+  File "C:\Users\Pyry\AppData\Local\Programs\Python\Python37\lib\site-packages\sc2\units.py", line 89, in take
+    assert (not require_all) or len(self) >= n
+AssertionError

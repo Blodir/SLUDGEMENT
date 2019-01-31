@@ -82,12 +82,46 @@ class SpendingQueue():
                 or (self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 19)
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
                 self.spending_queue.reprioritize(ROACHWARREN, 30)
-            # GAS FOR ROACHES
+            
+            # 2nd and 3rd EXTRACTOR if going for roaches !
             if  (self.bot.units(ROACHWARREN).exists or self.bot.already_pending(ROACHWARREN)) and (
                 (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < 3) and (
-                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 30
+                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 35
                 ):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
+            
+            # MAKE ROACH SPEED
+            if (self.bot.units(LAIR).exists or self.bot.units(HIVE).exists) and not ROACHSPEED in self.bot.state.upgrades and not self.bot.already_pending_upgrade(ROACHSPEED):
+                self.spending_queue.reprioritize(ROACHSPEED, 26)
+            
+            # MAKE LAIR
+            if not self.bot.units(LAIR).exists and not self.bot.lair_already_pending() and not self.bot.units(HIVE).exists and (
+               self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32
+            ):
+                self.spending_queue.reprioritize(LAIR, 25)
+
+            # EVOLUTION CHABERS            
+            if  (self.bot.units(EVO).amount + self.bot.already_pending(EVO) < 2) and (
+                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 52
+                ):
+                self.spending_queue.reprioritize(EVO, 20)
+
+            if self.bot.units(EVO).ready.exists:
+                # MISSILE UPGRADE
+                if not self.bot.already_pending_upgrade(MISSILE1) and not MISSILE1 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(MISSILE1, 24)
+                elif not self.bot.already_pending_upgrade(MISSILE2) and not MISSILE2 in self.bot.state.upgrades and MISSILE1 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(MISSILE2, 24)
+                elif self.bot.units(HIVE).exists and not self.bot.already_pending_upgrade(MISSILE3) and not MISSILE3 in self.bot.state.upgrades and MISSILE2 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(MISSILE3, 24)
+                
+                # CARAPACE UPGRADE
+                if not self.bot.already_pending_upgrade(CARAPACE1) and not CARAPACE1 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(CARAPACE1, 24)
+                elif not self.bot.already_pending_upgrade(CARAPACE2) and not CARAPACE2 in self.bot.state.upgrades and CARAPACE1 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(CARAPACE2, 24)
+                elif self.bot.units(HIVE).exists and not self.bot.already_pending_upgrade(CARAPACE3) and not CARAPACE3 in self.bot.state.upgrades and CARAPACE2 in self.bot.state.upgrades:
+                    self.spending_queue.reprioritize(CARAPACE3, 24)
 
             if self.need_supply():
                 self.spending_queue.reprioritize(OVERLORD, 40)
@@ -106,9 +140,8 @@ class SpendingQueue():
                     self.spending_queue.reprioritize(SPIRE, 41)
                 if self.bot.units(SPIRE).exists:
                     self.spending_queue.reprioritize(MUTALISK, 39)
-                    
-            print(self.spending_queue)
 
+            print(self.spending_queue)
 
 
     def need_supply(self) -> bool:
