@@ -44,7 +44,6 @@ class UnitManager():
             self.bot._client.debug_text_world(f'observed', Point3((pos.x, pos.y, 10)), None, 12)
 
         # ASSIGN INJECT QUEENS
-        # TODO: DONT DO THIS IF ENEMIES CLOSEBY
         hatches = self.bot.find_closest_n_from_units(self.bot.start_location, 4, self.bot.units(HATCHERY)).ready.tags_not_in(set(map(lambda h: h.tag, self.inject_targets.keys())))
         for hatch in hatches:
             free_queens: Units = self.bot.units(QUEEN).tags_not_in(self.unselectable.tags).tags_not_in(self.inject_queens.tags)
@@ -130,7 +129,7 @@ class UnitManager():
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
-                should_engage: bool = self.evaluate_engagement(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(15, group.center), nearby_enemies) > 0
+                should_engage: bool = self.evaluate_engagement(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(20, nearby_enemies.center), nearby_enemies) > 0
                 if should_engage:
                     # attack enemy group
 
