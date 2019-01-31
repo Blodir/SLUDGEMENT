@@ -24,9 +24,12 @@ class UnitManager():
         self.unselectable = Units([], self.bot._game_data)
         self.unselectable_enemy_units = Units([], self.bot._game_data)
         self.scouting_ttl = 300
+        self.army_scouting_ttl = 100
+        self.panic_scout_ttl = 0
         self.inject_targets: Dict[Unit, Unit] = {}
         self.inject_queens: Units = Units([], self.bot._game_data)
         self.dead_tumors: Units = Units([], self.bot._game_data)
+        self.spread_overlords: Units = Units([], self.bot._game_data)
 
     async def iterate(self, iteration):
         self.scouting_ttl -= 1
@@ -85,6 +88,33 @@ class UnitManager():
             for position in scouting_order:
                 actions.append(unit.move(position, True))
             self.unselectable.append(unit)
+
+        # army scout only if opponent army has not been close for a while
+        if not observed_enemy_army.closer_than(70, self.bot.own_natural).amount > 2:
+            self.army_scouting_ttl -= 1
+        else:
+            self.army_scouting_ttl = 60
+
+        if self.army_scouting_ttl <= 0 and army_units(LING).exists:
+            self.army_scouting_ttl = 60
+            unit: Unit = army_units(LING).random
+            actions.append(unit.move(self.bot.enemy_start_locations[0]))
+            self.unselectable.append(unit)
+        
+        # panic scout main if drone difference gets high enough
+        if self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount > 25 * self.scouting_manager.enemy_townhall_count:
+            if self.panic_scout_ttl <= 0:
+                if self.bot.units(OVERLORD).exists:
+                    closest_overlord = self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags).closest_to(self.bot.enemy_start_locations[0])
+                    original_position = closest_overlord.position
+                    actions.append(closest_overlord.stop())
+                    actions.append(closest_overlord.move(self.bot.enemy_start_locations[0], True))
+                    actions.append(closest_overlord.move(original_position, True))
+                    self.unselectable.append(closest_overlord)
+                    self.panic_scout_ttl = 300
+            else:
+                self.panic_scout_ttl -= 1
+
 
 
         # KILL TERRAN BUILDINGS WITH MUTAS
@@ -280,7 +310,7 @@ class UnitManager():
         #print(f'//// Creep: {round(execution_time, 3)}ms')
 
         # OVERLORD retreat from enemy structures
-        for overlord in self.bot.units(UnitTypeId.OVERLORD):
+        for overlord in self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags):
             if self.bot.known_enemy_structures.closer_than(15, overlord):
                 destination: Point2 = overlord.position + 4 * overlord.position.direction_vector(self.bot.own_natural)
                 actions.append(overlord.move(destination))

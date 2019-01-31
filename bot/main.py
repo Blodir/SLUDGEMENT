@@ -60,6 +60,11 @@ class MyBot(sc2.BotAI):
                             positions.append(expansion)
                 for position in positions:
                     await self.do(unit.move(position, True))
+            else:
+                # Randomly spread overlords
+                random_position = Point2((random.randint(0, self._game_info.pathing_grid.width - 1), random.randint(0, self._game_info.pathing_grid.height - 1)))
+                await self.do(unit.move(random_position))
+                self.unit_manager.spread_overlords.append(unit)
 
     async def on_unit_destroyed(self, unit_tag):
         # remove destroyed unit from scouted units

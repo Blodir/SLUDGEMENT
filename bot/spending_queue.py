@@ -141,7 +141,6 @@ class SpendingQueue():
                 if self.bot.units(SPIRE).exists:
                     self.spending_queue.reprioritize(MUTALISK, 39)
 
-            print(self.spending_queue)
 
 
     def need_supply(self) -> bool:
