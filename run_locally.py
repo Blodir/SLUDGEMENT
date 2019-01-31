@@ -20,7 +20,7 @@ def main():
     run_game(maps.get("(2) Redshift LE"), [
         Bot(race, MyBot()),
         Computer(Race.Protoss, Difficulty.VeryHard)
-    ], realtime=False, step_time_limit=2, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
+    ], realtime=True, step_time_limit=None, game_time_limit=(60*20), save_replay_as="test.SC2Replay")
 
 if __name__ == '__main__':
     main()

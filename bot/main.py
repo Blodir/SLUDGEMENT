@@ -30,8 +30,6 @@ from .scouting_manager import ScoutingManager
 from .data import *
 from .spending_helper import optimal_combination
 
-# Bots are created as classes and they need to have on_step method defined.
-# Do not change the name of the class!
 class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
@@ -91,6 +89,7 @@ class MyBot(sc2.BotAI):
 
         if iteration == 0:
             actions.append(self.units(LARVA).random.train(DRONE))
+            await self.worker_split()
             await self.do_actions(actions)
             return
         if iteration == 1:
@@ -434,3 +433,9 @@ class MyBot(sc2.BotAI):
     def can_afford_minerals(self, type_id: UnitTypeId, available_minerals):
         unitData: UnitTypeData = self._game_data.units[type_id.value]
         return unitData.cost.minerals <= available_minerals
+
+    # credit: https://github.com/Hannessa/sc2-bots/blob/master/cannon-lover/base_bot.py
+    async def worker_split(self):
+        for worker in self.workers:
+            closest_mineral_patch = self.state.mineral_field.closest_to(worker)
+            await self.do(worker.gather(closest_mineral_patch))
