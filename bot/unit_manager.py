@@ -130,7 +130,8 @@ class UnitManager():
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
-                if group_value + self.bot.calculate_combat_value(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(15, group.center)) > enemy_value:
+                should_engage: bool = self.evaluate_engagement(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(15, group.center), nearby_enemies) > 0
+                if should_engage:
                     # attack enemy group
 
                     # ling micro
@@ -193,7 +194,7 @@ class UnitManager():
                     else:
                         self.bot._client.debug_text_world(f'idle', Point3((group.center.x, group.center.y, 10)), None, 12)
         execution_time = (time.time() - groups_start_time) * 1000
-        print(f'//// Groups: {round(execution_time, 3)}ms')
+        #print(f'//// Groups: {round(execution_time, 3)}ms')
 
         # DRONE DEFENSE
         for expansion in self.bot.owned_expansions:
@@ -260,7 +261,7 @@ class UnitManager():
                                 # regroup extra queens
                                 actions.append(queen.move(extra_queens.center))
         execution_time = (time.time() - extra_queen_start_time) * 1000
-        print(f'//// Extra queens: {round(execution_time, 3)}ms')
+        #print(f'//// Extra queens: {round(execution_time, 3)}ms')
 
         creep_start_time = time.time()
         # CREEP TUMORS
@@ -277,7 +278,7 @@ class UnitManager():
                     actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
                     self.dead_tumors.append(tumor)
         execution_time = (time.time() - creep_start_time) * 1000
-        print(f'//// Creep: {round(execution_time, 3)}ms')
+        #print(f'//// Creep: {round(execution_time, 3)}ms')
 
         # OVERLORD retreat from enemy structures
         for overlord in self.bot.units(UnitTypeId.OVERLORD):
@@ -286,88 +287,6 @@ class UnitManager():
                 actions.append(overlord.move(destination))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        '''
-        to_remove = []
-        for unit in army_units_wo_orders:
-            if unit.tag in to_remove:
-                continue
-            nearby_units = army_units_wo_orders.closer_than(5, unit.position)
-            if nearby_units.exists:
-                groups.append(nearby_units)
-                to_remove.extend(nearby_units.tags)
-        army_units_wo_orders = army_units_wo_orders.tags_not_in(set(to_remove))
-        for unit_group in groups:
-            enemies = observed_enemy_units.filter(lambda u: u.can_attack_ground).closer_than(20, unit_group.center)
-            own_value = self.bot.calculate_combat_value(unit_group)
-            center: Point2 = unit_group.center
-            if enemies.exists:
-                enemy_value = self.bot.calculate_combat_value(enemies)
-                difference = own_value - enemy_value
-                if own_value > 1.2 * enemy_value:
-                    self.bot._client.debug_text_world(f'fighting: {difference}', Point3((center.x, center.y, 10)), None, 12)
-                    for unit in unit_group:
-                        actions.append(unit.attack(enemies.center))
-                else:
-                    # retreat
-                    distance_to_main = unit_group.center.distance_to(self.bot.start_location)
-                    if distance_to_main < 5:
-                        self.bot._client.debug_text_world(f'fighting: {difference}', Point3((center.x, center.y, 10)), None, 12)
-                        for unit in unit_group:
-                            actions.append(unit.attack(self.bot.start_location))
-                    else:
-                        self.bot._client.debug_text_world(f'retreating: {difference}', Point3((center.x, center.y, 10)), None, 12)
-                        for unit in unit_group:
-                            actions.append(unit.move(self.bot.start_location))
-            elif own_value > 1.2 * self.scouting_manager.estimated_enemy_army_value:
-                difference = own_value - self.scouting_manager.estimated_enemy_army_value
-                self.bot._client.debug_text_world(f'attacking base: {difference}', Point3((center.x, center.y, 10)), None, 12)
-                for unit in unit_group:
-                    actions.append(unit.attack(self.bot.enemy_start_locations[0]))
-            else:
-                self.bot._client.debug_text_world('merging', Point3((center.x, center.y, 10)), None, 12)
-                # merge groups
-                temp = all_army.tags_not_in(unit_group.tags)
-                if temp.exists:
-                    target_pos = temp.closest_to(unit_group.center).position
-                    for unit in unit_group:
-                        actions.append(unit.move(target_pos))
-        
-        # DRONES AND QUEENS
-
-        for expansion in self.bot.owned_expansions:
-            enemy_raid = observed_enemy_units.closer_than(20, expansion)
-            if enemy_raid.exists:
-                raid_value = self.bot.calculate_combat_value(enemy_raid)
-                defending_army: Units = all_army.closer_than(15, expansion)
-                if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
-                    for defender in self.bot.units.closer_than(15, expansion):
-                        pos = defender.position
-                        if expansion != self.bot.start_location:
-                            if defender.type_id == DRONE:
-                                self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
-                                actions.append(defender.gather(self.bot.main_minerals.random))
-                            elif defender.type_id == QUEEN:
-                                self.bot._client.debug_text_world(f'attacking', Point3((pos.x, pos.y, 10)), None, 12)
-                                actions.append(defender.attack(expansion.position))
-                        else:
-                            # counter worker rush
-                            self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
-                            actions.append(defender.attack(expansion.position))
-        '''
         return actions
 
     def one_of_targets_in_range(self, unit: Unit, targets: Units):
@@ -408,9 +327,6 @@ class UnitManager():
             commands.append(unit(command, target))
         return commands
     
-    def get_engagement_prediction(self, army1: Units, army2: Units):
-        pass
-    
     async def inject(self):
         ready_queens = []
         actions = []
@@ -421,3 +337,62 @@ class UnitManager():
         for queen in ready_queens:
             actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.bot.units(HATCHERY).first))
         return actions
+
+    def evaluate_engagement(self, own_units: Units, enemy_units: Units):
+        own_ranged: Units = own_units.filter(lambda u: u.ground_range > 3)
+        own_melee: Units = own_units.tags_not_in(own_ranged.tags)
+        enemy_ranged: Units = enemy_units.filter(lambda u: u.ground_range > 3)
+        
+        try:
+            own_ranged_value = self.bot.calculate_combat_value(own_ranged)
+        except:
+            own_ranged_value = 0
+        try:
+            enemy_ranged_value = self.bot.calculate_combat_value(enemy_ranged)
+        except:
+            enemy_ranged_value = 0
+
+        corrected_own_value = self.bot.calculate_combat_value(own_units)
+
+        if own_ranged_value < enemy_ranged_value:
+            perimeter = self.get_enemy_perimeter(enemy_units.not_structure, self.bot.known_enemy_structures, own_units.center)
+            if own_melee.exists:
+                own_melee_value = self.bot.calculate_combat_value(Units(own_melee.take(perimeter * 2, require_all=False), self.bot._game_data))
+            else:
+                own_melee_value = 0
+            corrected_own_value = own_melee_value + own_ranged_value
+        evaluation = corrected_own_value - self.bot.calculate_combat_value(enemy_units)
+        print('evaluation: ', evaluation)
+        return evaluation 
+    
+    def get_enemy_perimeter(self, enemy_units: Units, enemy_structures: Units, reference_position: Point2):
+        perimeter = 0
+        pathing_grid: PixelMap = self.bot._game_info.pathing_grid
+        for enemy_unit in enemy_units:
+            enemies_excluding_self: Units = enemy_units.tags_not_in({enemy_unit.tag})
+            pos: Point2 = enemy_unit.position
+            positions = [
+                Point2((pos.x-1, pos.y+1)),
+                Point2((pos.x, pos.y+1)),
+                Point2((pos.x+1, pos.y+1)),
+                Point2((pos.x-1, pos.y)),
+                # [pos.x, pos.y], disregard center point
+                Point2((pos.x+1, pos.y)),
+                Point2((pos.x-1, pos.y-1)),
+                Point2((pos.x, pos.y-1)),
+                Point2((pos.x+1, pos.y-1)),
+            ]
+            if reference_position.distance_to(enemy_unit.position) > 5:
+                positions = remove_n_furthest_points(positions, reference_position, 3)
+            for p in positions:
+                if pathing_grid[math.floor(p.x), math.floor(p.y)] <= 0 and not enemies_excluding_self.closer_than(1, p).exists and not enemy_structures.closer_than(1, p).exists:
+                    perimeter += 1
+        return perimeter
+    
+def remove_n_furthest_points(points: List[Point2], reference, n):
+    def sort(p: Point2):
+        return p.distance_to(reference)
+    points.sort(reverse = True, key = sort)
+    for i in range(n):
+        points.pop(0)
+    return points
