@@ -362,7 +362,6 @@ class UnitManager():
                 own_melee_value = 0
             corrected_own_value = own_melee_value + own_ranged_value
         evaluation = corrected_own_value - self.bot.calculate_combat_value(enemy_units)
-        print('evaluation: ', evaluation)
         return evaluation 
     
     def get_enemy_perimeter(self, enemy_units: Units, enemy_structures: Units, reference_position: Point2):

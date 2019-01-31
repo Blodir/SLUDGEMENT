@@ -205,6 +205,14 @@ class MyBot(sc2.BotAI):
                 if not army_unit_ids:
                     continue
 
+                # wait until can afford any army unit
+                temp = False
+                for id in army_unit_ids:
+                    if not self.can_afford_minerals(id, minerals_left):
+                        temp = True
+                if temp:
+                    continue
+
                 army_unit_resource_values = []
                 for unit_id in army_unit_ids:
                     cost = self.get_resource_value_full(unit_id)
@@ -261,10 +269,14 @@ class MyBot(sc2.BotAI):
             else:
                 structure_position: Union(Point2, Unit)
                 if id == EXTRACTOR:
-                    for geyser in await self.get_own_geysers():
-                        if await self.can_place(EXTRACTOR, geyser.position):
+                    i = 0
+                    geysers = self.get_own_geysers()
+                    for geyser in geysers:
+                        if await self.can_place(EXTRACTOR,geyser.position):
+                            print('can place !!!')
                             structure_position = geyser
                             break
+                        print('CANT PLACE')
                 else:
                     structure_position = await self.find_building_placement(id)
                 if structure_position:
@@ -284,14 +296,11 @@ class MyBot(sc2.BotAI):
                 return self.units(LARVA).random.train(id)
         return None
 
-    async def get_own_geysers(self) -> Units:
+    def get_own_geysers(self) -> Units:
         geysers: Units = Units([], self._game_data)
         for own_expansion in self.owned_expansions:
-            for expansion in self.expansion_locations:
-                if expansion == own_expansion:
-                    for unit in self.expansion_locations[expansion]:
-                        if unit.type_id == VESPENE_GEYSER or unit.type_id == SPACEPLATFORMGEYSER:
-                            geysers.append(unit)
+            temp = self.state.vespene_geyser.closer_than(10, own_expansion)
+            geysers.extend(temp)
         return geysers
     
     # returns the amount of drones currently mining minerals
@@ -423,3 +432,7 @@ class MyBot(sc2.BotAI):
                 temp = temp.tags_not_in({closest.tag})
                 output.append(closest)
         return output
+    
+    def can_afford_minerals(self, type_id: UnitTypeId, available_minerals):
+        unitData: UnitTypeData = self._game_data.units[type_id.value]
+        return unitData.cost.minerals <= available_minerals

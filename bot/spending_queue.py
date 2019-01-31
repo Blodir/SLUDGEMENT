@@ -49,7 +49,7 @@ class SpendingQueue():
             # (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count
             if (
                 distance_multiplier * self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
-                self.scouting_manager.enemy_proxies_exist) and not self.scouting_manager.terran_floating_buildings:
+                self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 20) and not self.scouting_manager.terran_floating_buildings:
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
@@ -76,9 +76,18 @@ class SpendingQueue():
 
             if self.need_spawningpool():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
-            
-            if self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32 and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
+
+            # ROACH WARREN            
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 28
+                or (self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 19)
+                ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
                 self.spending_queue.reprioritize(ROACHWARREN, 30)
+            # GAS FOR ROACHES
+            if  (self.bot.units(ROACHWARREN).exists or self.bot.already_pending(ROACHWARREN)) and (
+                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < 3) and (
+                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 30
+                ):
+                self.spending_queue.reprioritize(EXTRACTOR, 29)
 
             if self.need_supply():
                 self.spending_queue.reprioritize(OVERLORD, 40)
@@ -98,6 +107,7 @@ class SpendingQueue():
                 if self.bot.units(SPIRE).exists:
                     self.spending_queue.reprioritize(MUTALISK, 39)
                     
+            print(self.spending_queue)
 
 
 
