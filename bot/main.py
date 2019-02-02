@@ -51,7 +51,7 @@ class MyBot(sc2.BotAI):
                 if self.enemy_race == Race.Protoss:
                     # Scout for cannon rush
                     positions.append(self.own_natural)
-                if self.enemy_race == Race.Terran:
+                else:
                     # Scout for proxy rax
                     for expansion in self.expansion_locations:
                         if expansion == self.start_location or expansion == self.own_natural:
@@ -62,9 +62,11 @@ class MyBot(sc2.BotAI):
                     await self.do(unit.move(position, True))
             else:
                 # Randomly spread overlords
-                random_position = Point2((random.randint(0, self._game_info.pathing_grid.width - 1), random.randint(0, self._game_info.pathing_grid.height - 1)))
-                await self.do(unit.move(random_position))
-                self.unit_manager.spread_overlords.append(unit)
+                if not self.unit_manager.spread_overlords.tags_in({unit.tag}).exists:
+                    print('move new overlord')
+                    random_position = Point2((random.randint(0, self._game_info.pathing_grid.width - 1), random.randint(0, self._game_info.pathing_grid.height - 1)))
+                    await self.do(unit.move(random_position))
+            self.unit_manager.spread_overlords.append(unit)
 
     async def on_unit_destroyed(self, unit_tag):
         # remove destroyed unit from scouted units
@@ -106,6 +108,7 @@ class MyBot(sc2.BotAI):
             self.enemy_natural = self.calculate_enemy_natural()
             self.own_natural = self.calculate_own_natural()
             actions.append(self.units(OVERLORD).first.move(self.enemy_natural))
+            self.unit_manager.spread_overlords.append(self.units(OVERLORD).first)
             await self.do_actions(actions)
             return
 

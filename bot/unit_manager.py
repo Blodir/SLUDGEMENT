@@ -105,6 +105,7 @@ class UnitManager():
         if self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount > 25 * self.scouting_manager.enemy_townhall_count:
             if self.panic_scout_ttl <= 0:
                 if self.bot.units(OVERLORD).exists:
+                    print('panic scouting')
                     closest_overlord = self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags).closest_to(self.bot.enemy_start_locations[0])
                     original_position = closest_overlord.position
                     actions.append(closest_overlord.stop())
@@ -143,6 +144,10 @@ class UnitManager():
             if unit.is_idle or unit.is_gathering or not unit.is_visible:
                 to_remove.append(unit.tag)
         self.unselectable = self.unselectable.tags_not_in(set(to_remove))
+
+        self.spread_overlords = self.bot.units.tags_in(self.spread_overlords.tags)
+        for overlord in self.spread_overlords:
+            self.bot._client.debug_text_world(f'spread', Point3((overlord.position.x,overlord.position.y, 10)), None, 12)
 
         groups_start_time = time.time()
         # ARMY GROUPS
@@ -309,10 +314,11 @@ class UnitManager():
         execution_time = (time.time() - creep_start_time) * 1000
         #print(f'//// Creep: {round(execution_time, 3)}ms')
 
-        # OVERLORD retreat from enemy structures
+        # OVERLORD retreat from enemy structures and anti air stuff
         for overlord in self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags):
-            if self.bot.known_enemy_structures.closer_than(15, overlord):
-                destination: Point2 = overlord.position + 4 * overlord.position.direction_vector(self.bot.own_natural)
+            threats: Units = self.bot.known_enemy_units.filter(lambda u: u.is_structure or u.can_attack_air).closer_than(10, overlord) 
+            if threats.exists:
+                destination: Point2 = overlord.position + 2 * threats.center.direction_vector(overlord.position)
                 actions.append(overlord.move(destination))
 
 
