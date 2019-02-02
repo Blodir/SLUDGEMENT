@@ -183,8 +183,12 @@ class UnitManager():
                                 microing_back_tags.append(unit.tag)
                                 self.bot._client.debug_text_world(f'micro point', Point3((target.x, target.y, 10)), None, 12)
                                 self.bot._client.debug_text_world(f'microing back', Point3((unit.position.x, unit.position.y, 10)), None, 12)
-                    actions.extend(self.command_group(group.tags_not_in(set(microing_back_tags)), AbilityId.ATTACK, nearby_enemies.center))
-                    self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x, group.center.y, 10)), None, 12)
+                    
+                    if nearby_enemies.exclude_type({UnitTypeId.CHANGELINGZERGLING, UnitTypeId.CHANGELING, UnitTypeId.CHANGELINGZERGLINGWINGS}).exists:
+                        actions.extend(self.command_group(group.tags_not_in(set(microing_back_tags)), AbilityId.ATTACK, nearby_enemies.center))
+                    else:
+                        actions.extend(self.command_group(group, AbilityId.ATTACK, nearby_enemies.closest_to(group.center)))
+                    self.bot._client.debug_text_world(f'attacking group', Point3((group.center.x,group.center.y, 10)), None, 12)
                 else:
                     # retreat somewhwere
                     mins = self.bot.get_mineral_fields_for_expansion(self.bot.closest_mining_expansion_location(group.center).position)
