@@ -60,10 +60,8 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(ARMY, 3)
             
             queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
-            if self.scouting_manager.estimated_enemy_army_value > 1.2 * self.scouting_manager.own_army_value and (
-                self.scouting_manager.observed_enemy_units.closer_than(50, self.bot.own_natural)
-            ):
-                # panic queens if large army within 100 units of natural
+            if self.bot.calculate_combat_value(self.scouting_manager.observed_enemy_units.closer_than(60, self.bot.own_natural)) > 1.2 * self.scouting_manager.own_army_value:
+                # panic queens
                 self.spending_queue.reprioritize(QUEEN, 37)
             elif self.need_queen():
                 self.spending_queue.reprioritize(QUEEN, 21)
