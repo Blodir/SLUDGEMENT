@@ -34,16 +34,19 @@ class SpendingQueue():
 
             distance_multiplier = 1
             # TODO: consider enemy unit speed
-            if self.scouting_manager.observed_enemy_units.exists:
-                closest_distance = self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD}).closest_distance_to(self.bot.own_natural)
-                if closest_distance > 90:
-                    distance_multiplier = 0.8
-                elif closest_distance > 70:
-                    distance_multiplier = 1
-                elif closest_distance > 20:
-                    distance_multiplier = 1.5
-                elif closest_distance < 20:
-                    distance_multiplier = 2
+            try:
+                if self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD}).exists:
+                    closest_distance = self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD}).closest_distance_to(self.bot.own_natural)
+                    if closest_distance > 90:
+                        distance_multiplier = 0.8
+                    elif closest_distance > 70:
+                        distance_multiplier = 1
+                    elif closest_distance > 20:
+                        distance_multiplier = 1.5
+                    elif closest_distance < 20:
+                        distance_multiplier = 2
+            except:
+                print('spending distance failure')
 
             self.bot._client.debug_text_screen(f'Distance multiplier: {distance_multiplier}', (0, 0), None, 8)
 
