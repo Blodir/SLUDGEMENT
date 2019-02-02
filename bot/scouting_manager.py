@@ -53,8 +53,10 @@ class ScoutingManager():
         self.enemy_townhall_count = temp_basecount
 
         # Estimate army values
-        self.estimated_enemy_army_value = self.bot.calculate_combat_value(self.observed_enemy_units.not_structure.exclude_type({DRONE, OVERLORD, UnitTypeId.SCV, UnitTypeId.PROBE}))
-        self.own_army_value = self.bot.calculate_combat_value(self.bot.units.not_structure.ready.filter(lambda u: u.type_id != DRONE and u.type_id != QUEEN))
+        self.estimated_enemy_army_value = self.bot.calculate_combat_value(self.observed_enemy_units.not_structure.exclude_type({DRONE, OVERLORD, UnitTypeId.SCV, UnitTypeId.PROBE, QUEEN}))
+        self.own_army = self.bot.units.not_structure.filter(lambda u: u.type_id != DRONE and u.type_id != QUEEN and u.type_id != OVERLORD)
+        self.own_army_value = self.bot.calculate_combat_value(self.own_army)
+        self.own_ready_army_value = self.bot.calculate_combat_value(self.own_army.ready)
         # TODO: consider any army type in the army value calculation
         # HACK vvvvvv
         self.own_army_value += self.bot.already_pending(LING) * 50 + self.bot.already_pending(ROACH) * 100
