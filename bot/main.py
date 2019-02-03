@@ -273,19 +273,22 @@ class MyBot(sc2.BotAI):
             if worker is None:
                 return None
             else:
-                structure_position: Union(Point2, Unit)
-                if id == EXTRACTOR:
-                    i = 0
-                    geysers = self.get_own_geysers()
-                    for geyser in geysers:
-                        if await self.can_place(EXTRACTOR,geyser.position):
-                            structure_position = geyser
-                            break
-                else:
-                    structure_position = await self.find_building_placement(id)
-                if structure_position:
-                    self.unit_manager.unselectable.append(worker)
-                    return worker.build(id, structure_position)
+                try:
+                    structure_position: Union(Point2, Unit)
+                    if id == EXTRACTOR:
+                        i = 0
+                        geysers = self.get_own_geysers()
+                        for geyser in geysers:
+                            if await self.can_place(EXTRACTOR,geyser.position):
+                                structure_position = geyser
+                                break
+                    else:
+                        structure_position = await self.find_building_placement(id)
+                    if structure_position:
+                        self.unit_manager.unselectable.append(worker)
+                        return worker.build(id, structure_position)
+                except:
+                    print('ERROR in create_construction_action: Invalid structure_position')
         elif construction_type == ConstructionType.FROM_BUILDING:
             buildingId = get_construction_building(id)
             buildings = self.units(buildingId).ready.noqueue
