@@ -16,6 +16,7 @@ class ScoutingManager():
         self.own_army_value = 0
         self.bot = bot
         self.unit_observations: List[UnitObservation] = []
+        self.enemy_tech = []
     
     def iterate(self):
         # Update unit observations based on known enemy units
@@ -81,6 +82,8 @@ class ScoutingManager():
         ) and self.bot.getTimeInSeconds() > 360: # 6 minutes
             self.terran_floating_buildings = True
 
+        self.update_enemy_tech()
+
     def get_enemy_raiders(self):
         output = {}
         for exp_position in self.bot.owned_expansions:
@@ -95,3 +98,15 @@ class ScoutingManager():
                 to_remove = observation
         if to_remove != None:
             self.unit_observations.remove(to_remove)
+    
+    def update_enemy_tech(self):
+        if self.bot.enemy_race == Race.Protoss:
+            if not UnitTypeId.STARGATE in self.enemy_tech and (
+               self.bot.known_enemy_structures(UnitTypeId.STARGATE).exists or (
+               self.bot.known_enemy_units.of_type({UnitTypeId.VOIDRAY, UnitTypeId.PHOENIX, UnitTypeId.CARRIER, UnitTypeId.ORACLE}).exists
+            )):
+                self.enemy_tech.append(UnitTypeId.STARGATE)
+        elif self.bot.enemy_race == Race.Terran:
+            pass
+        else:
+            pass

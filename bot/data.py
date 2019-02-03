@@ -15,6 +15,7 @@ DRONE = UnitTypeId.DRONE
 HATCHERY = UnitTypeId.HATCHERY
 SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
 ROACHWARREN = UnitTypeId.ROACHWARREN
+HYDRADEN = UnitTypeId.HYDRALISKDEN
 QUEEN = UnitTypeId.QUEEN
 EXTRACTOR = UnitTypeId.EXTRACTOR
 SPIRE = UnitTypeId.SPIRE
@@ -24,6 +25,7 @@ EVO = UnitTypeId.EVOLUTIONCHAMBER
 
 LING = UnitTypeId.ZERGLING
 ROACH = UnitTypeId.ROACH
+HYDRA = UnitTypeId.HYDRALISK
 MUTALISK = UnitTypeId.MUTALISK
 
 MINERAL_FIELD = UnitTypeId.MINERALFIELD
@@ -50,7 +52,7 @@ class ConstructionType(enum.Enum):
     FROM_LARVA = 2
 
 def get_construction_type(unitId: UnitTypeId) -> ConstructionType:
-    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE or unitId == ROACHWARREN or unitId == EVO:
+    if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE or unitId == ROACHWARREN or unitId == EVO or unitId == HYDRADEN:
         return ConstructionType.BUILDING
     if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR or unitId == ROACHSPEED or (
         unitId==MISSILE1) or (

@@ -29,6 +29,7 @@ from .unit_manager import UnitManager
 from .scouting_manager import ScoutingManager
 from .data import *
 from .spending_helper import optimal_combination
+from .army_composition_manager import ArmyCompositionManager
 
 class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
@@ -38,6 +39,7 @@ class MyBot(sc2.BotAI):
         self.scouting_manager = ScoutingManager(self)
         self.spending_queue = SpendingQueue(self, self.scouting_manager)
         self.unit_manager = UnitManager(self, self.scouting_manager)
+        self.army_composition_manager: ArmyCompositionManager = ArmyCompositionManager(self, self.scouting_manager)
 
     def _prepare_first_step(self):
         self.expansion_locations
@@ -116,6 +118,9 @@ class MyBot(sc2.BotAI):
         self.scouting_manager.iterate()
         execution_time = (time.time() - scout_start_time) * 1000
         #print(f'Scouting: {round(execution_time, 3)}ms')
+
+        # ARMY COMPOSITION
+        self.army_composition_manager.iterate()
 
         spending_start_time = time.time()
         # UPDATE SPENDING QUEUE
@@ -202,11 +207,7 @@ class MyBot(sc2.BotAI):
                 vespene_left = 0
             if p == ARMY:
                 # make army until no larva remaining
-                army_unit_ids = []
-                if self.units(SPAWNINGPOOL).exists:
-                    army_unit_ids.append(LING)
-                if self.units(ROACHWARREN).exists:
-                    army_unit_ids.append(ROACH)
+                army_unit_ids = self.army_composition_manager.ids_to_build
 
                 if not army_unit_ids:
                     continue
@@ -264,7 +265,7 @@ class MyBot(sc2.BotAI):
                     larvae_left -= 1
         for p in to_remove:
             priorities.delete(p)
-        return actions;
+        return actions
 
     # returns None if action could not be done
     async def create_construction_action(self, id: UnitTypeId, construction_type: ConstructionType):
