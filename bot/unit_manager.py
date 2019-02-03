@@ -164,7 +164,12 @@ class UnitManager():
             group_value = self.bot.calculate_combat_value(group)
 
             if nearby_enemies and nearby_enemies.exists:
-                should_engage: bool = self.evaluate_engagement(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(20, nearby_enemies.center), nearby_enemies) > 0
+                bias = 1
+                if nearby_enemies.closer_than(15, self.bot.own_natural).exists and group_value > 750:
+                    bias = 1.2
+                if self.bot.supply_used > 180:
+                    bias = 1.5
+                should_engage: bool = self.evaluate_engagement(self.bot.units.exclude_type({DRONE, OVERLORD}).closer_than(20, nearby_enemies.center), nearby_enemies, bias) > 0
                 if should_engage:
                     # attack enemy group
 
@@ -377,13 +382,13 @@ class UnitManager():
             actions.append(queen(AbilityId.EFFECT_INJECTLARVA, self.bot.units(HATCHERY).first))
         return actions
 
-    def evaluate_engagement(self, own_units: Units, enemy_units: Units):
+    def evaluate_engagement(self, own_units: Units, enemy_units: Units, bias = 1):
         own_ranged: Units = own_units.filter(lambda u: u.ground_range > 3)
         own_melee: Units = own_units.tags_not_in(own_ranged.tags)
         enemy_ranged: Units = enemy_units.filter(lambda u: u.ground_range > 3)
         
         try:
-            own_ranged_value = self.bot.calculate_combat_value(own_ranged)
+            own_ranged_value = bias * self.bot.calculate_combat_value(own_ranged)
         except:
             own_ranged_value = 0
         try:
@@ -391,12 +396,12 @@ class UnitManager():
         except:
             enemy_ranged_value = 0
 
-        corrected_own_value = self.bot.calculate_combat_value(own_units)
+        corrected_own_value = bias * self.bot.calculate_combat_value(own_units)
 
         if own_ranged_value < enemy_ranged_value and own_units.exists:
             perimeter = self.get_enemy_perimeter(enemy_units.not_structure, self.bot.known_enemy_structures, own_units.center)
             if own_melee.exists:
-                own_melee_value = self.bot.calculate_combat_value(Units(own_melee.take(perimeter * 2, require_all=False), self.bot._game_data))
+                own_melee_value = bias * self.bot.calculate_combat_value(Units(own_melee.take(perimeter * 2, require_all=False), self.bot._game_data))
             else:
                 own_melee_value = 0
             corrected_own_value = own_melee_value + own_ranged_value

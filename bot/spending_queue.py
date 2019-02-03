@@ -102,7 +102,6 @@ class SpendingQueue():
                 UnitTypeId.STARGATE in self.scouting_manager.enemy_tech or (
                 self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 50)
             ):
-                print('make hydras')
                 self.spending_queue.reprioritize(HYDRADEN, 31)
             
             # MAKE LAIR
