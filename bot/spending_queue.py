@@ -45,8 +45,11 @@ class SpendingQueue():
                         distance_multiplier = 1.5
                     elif closest_distance < 20:
                         distance_multiplier = 2
+                if self.scouting_manager.observed_enemy_units(LING).amount > 4 and distance_multiplier < 1:
+                    # if they are making lings, have to match ling count exactly
+                    distance_multiplier = 1
             except:
-                print('spending distance failure')
+                print('spending distance multiplier failure')
 
             self.bot._client.debug_text_screen(f'Distance multiplier: {distance_multiplier}', (0, 0), None, 8)
 
