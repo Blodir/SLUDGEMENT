@@ -94,7 +94,7 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
 
             # ROACH WARREN            
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 28
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 28
                 or (self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 19)
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
                 self.spending_queue.reprioritize(ROACHWARREN, 30)
