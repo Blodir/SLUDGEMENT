@@ -20,6 +20,8 @@ class SpendingQueue():
         self.build_order_runner = BORunner(build)
 
         self.goal_drone_count_per_enemy_base = 24 if self.bot.enemy_race == Race.Zerg else 27
+
+        self.overseer_ttl = 0
     
     def get_spending_queue(self):
         return self.spending_queue
@@ -31,6 +33,12 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(unit_id, 50)
         else:
             self.update_hatchery_priority()
+
+            max_workers = 36
+            if self.scouting_manager.enemy_townhall_count == 2:
+                max_workers = 52
+            if self.scouting_manager.enemy_townhall_count > 2:
+                max_workers = 80
 
             distance_multiplier = 1
             # TODO: consider enemy unit speed
@@ -57,7 +65,9 @@ class SpendingQueue():
             # (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE)) > self.goal_drone_count_per_enemy_base * self.scouting_manager.enemy_townhall_count
             if (
                 distance_multiplier * self.scouting_manager.estimated_enemy_army_value > self.scouting_manager.own_army_value) or (
-                self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 20) and not self.scouting_manager.terran_floating_buildings:
+                self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 20) or (
+                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= max_workers
+                ) and not self.scouting_manager.terran_floating_buildings:
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
@@ -112,6 +122,12 @@ class SpendingQueue():
                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32
             ):
                 self.spending_queue.reprioritize(LAIR, 25)
+
+            self.overseer_ttl -= 1
+            # OVERSEER - always have one
+            if (self.bot.units(LAIR).exists or self.bot.units(HIVE).exists) and not self.bot.units(OVERSEER).exists and not self.bot.already_pending(OVERSEER) and self.overseer_ttl <= 0:
+                self.spending_queue.reprioritize(OVERSEER, 20)
+                self.overseer_ttl = 100
 
             # EVOLUTION CHAMBERS            
             if  (self.bot.units(EVO).amount + self.bot.already_pending(EVO) < 2) and (

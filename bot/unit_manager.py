@@ -82,9 +82,9 @@ class UnitManager():
             scouting_order: List[Point2] = []
             keys: List[Point2] = list(self.bot.expansion_locations.keys())
             for idx in range(len(self.bot.expansion_locations)):
-                closest = self.bot.start_location.closest(keys)
-                scouting_order.append(closest)
-                keys.remove(closest)
+                furthest = self.bot.enemy_start_locations[0].furthest(keys)
+                scouting_order.append(furthest)
+                keys.remove(furthest)
             for position in scouting_order:
                 actions.append(unit.move(position, True))
             self.unselectable.append(unit)
@@ -325,11 +325,27 @@ class UnitManager():
 
         # OVERLORD retreat from enemy structures and anti air stuff
         for overlord in self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags):
-            threats: Units = self.bot.known_enemy_units.filter(lambda u: u.is_structure or u.can_attack_air).closer_than(10, overlord) 
+            threats: Units = self.bot.known_enemy_units.filter(lambda u: u.is_structure or u.can_attack_air).closer_than(15, overlord) 
             if threats.exists:
                 destination: Point2 = overlord.position + 2 * threats.center.direction_vector(overlord.position)
                 actions.append(overlord.move(destination))
+        
+        # OVERSEERS
+        overseers: Units = self.bot.units(OVERSEER)
+        if overseers.exists:
+            for overseer in overseers:
+                if self.spread_overlords.find_by_tag(overseer.tag):
+                    self.spread_overlords = self.spread_overlords.tags_not_in({overseer.tag})
+                abilities = await self.bot.get_available_abilities(overseer)
+                if AbilityId.SPAWNCHANGELING_SPAWNCHANGELING in abilities:
+                    actions.append(overseer(AbilityId.SPAWNCHANGELING_SPAWNCHANGELING))
 
+        # CHANGELINGS
+        changelings: Units = self.bot.units(CHANGELING).tags_not_in(self.unselectable.tags)
+        if changelings.exists:
+            for changeling in changelings:
+                actions.append(changeling.move(self.bot.enemy_natural))
+                self.unselectable.append(changeling)
 
         return actions
 

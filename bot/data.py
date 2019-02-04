@@ -11,6 +11,7 @@ EGG = UnitTypeId.EGG
 LARVA = UnitTypeId.LARVA
 
 OVERLORD = UnitTypeId.OVERLORD
+OVERSEER = UnitTypeId.OVERSEER
 DRONE = UnitTypeId.DRONE
 HATCHERY = UnitTypeId.HATCHERY
 SPAWNINGPOOL = UnitTypeId.SPAWNINGPOOL
@@ -27,6 +28,8 @@ LING = UnitTypeId.ZERGLING
 ROACH = UnitTypeId.ROACH
 HYDRA = UnitTypeId.HYDRALISK
 MUTALISK = UnitTypeId.MUTALISK
+
+CHANGELING = UnitTypeId.CHANGELING
 
 MINERAL_FIELD = UnitTypeId.MINERALFIELD
 VESPENE_GEYSER = UnitTypeId.VESPENEGEYSER
@@ -54,7 +57,7 @@ class ConstructionType(enum.Enum):
 def get_construction_type(unitId: UnitTypeId) -> ConstructionType:
     if unitId == HATCHERY or unitId == SPAWNINGPOOL or unitId == EXTRACTOR or unitId == SPIRE or unitId == ROACHWARREN or unitId == EVO or unitId == HYDRADEN:
         return ConstructionType.BUILDING
-    if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR or unitId == ROACHSPEED or (
+    if unitId == QUEEN or unitId == LINGSPEED or unitId == LAIR or unitId == ROACHSPEED or unitId == OVERSEER or (
         unitId==MISSILE1) or (
         unitId==MISSILE2) or (
         unitId==MISSILE3) or (
@@ -78,6 +81,8 @@ def get_construction_building(id) -> UnitTypeId:
        id == CARAPACE2) or (
        id == CARAPACE3):
        return EVO
+    if id == OVERSEER:
+        return OVERLORD
     return None
 
 def is_townhall(id: UnitTypeId) -> bool:
