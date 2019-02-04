@@ -244,7 +244,7 @@ class UnitManager():
             enemy_raid: Units = observed_enemy_army.closer_than(10, expansion)
             if enemy_raid.exists:
                 raid_value = self.bot.calculate_combat_value(enemy_raid)
-                defending_army: Units = all_army.closer_than(15, expansion)
+                defending_army: Units = self.bot.units.closer_than(15, expansion)
                 if raid_value > self.bot.calculate_combat_value(defending_army.exclude_type({DRONE})):
                     for defender in self.bot.units(DRONE).closer_than(10, expansion).tags_not_in(self.unselectable.tags):
                         pos = defender.position
