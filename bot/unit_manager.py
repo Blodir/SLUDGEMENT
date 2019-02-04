@@ -252,36 +252,36 @@ class UnitManager():
                             self.bot._client.debug_text_world(f'mineral walking', Point3((pos.x, pos.y, 10)), None, 12)
                             actions.append(defender.gather(self.bot.main_minerals.random))
                         else:
-                            # counter worker rush
-                            if enemy_raid.closer_than(5, defender.position).exists:
+                            # pull drones vs harass
+                            if enemy_raid.closer_than(5, defender.position).exists and not enemy_raid.of_type({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).exists:
                                 self.bot._client.debug_text_world(f'pull the bois', Point3((pos.x, pos.y, 10)), None, 12)
                                 actions.append(defender.attack(enemy_raid.center))
+                            # counter worker rush
                             elif enemy_raid.of_type({DRONE, UnitTypeId.SCV, UnitTypeId.PROBE}).exists:
                                 if raid_value > 90:
                                     self.bot._client.debug_text_world(f'defend worker rush', Point3((pos.x, pos.y, 10)), None, 12)
                                     actions.append(defender.attack(enemy_raid.center))
 
-        # DEFEND CANNON RUSH WITH DRONES
+        # DEFEND CANNON RUSH AND OTHER STUFF WITH DRONES
 
-        if self.bot.enemy_race == Race.Protoss:
-            for expansion in self.bot.owned_expansions:
-                enemy_scouting_workers = self.bot.known_enemy_units({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
-                enemy_proxies = self.bot.known_enemy_structures.closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
-                if enemy_proxies.exists:
-                    for proxy in enemy_proxies:
-                        if proxy.type_id == UnitTypeId.PHOTONCANNON:
-                            for drone in self.bot.units(DRONE).tags_not_in(self.unselectable.tags).take(4, False):
-                                actions.append(drone.attack(proxy))
-                                self.unselectable.append(drone)
-                                self.unselectable_enemy_units.append(proxy)
-                if enemy_scouting_workers.exists:
-                    for enemy_worker in enemy_scouting_workers:
-                        own_workers: Units = self.bot.units(DRONE).tags_not_in(self.unselectable.tags)
-                        if own_workers.exists:
-                            own_worker: Unit = own_workers.closest_to(enemy_worker)
-                            actions.append(own_worker.attack(enemy_worker))
-                            self.unselectable.append(own_worker)
-                            self.unselectable_enemy_units.append(enemy_worker)
+        for expansion in self.bot.owned_expansions:
+            enemy_scouting_workers = self.bot.known_enemy_units({DRONE, UnitTypeId.PROBE, UnitTypeId.SCV}).closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+            enemy_proxies = self.bot.known_enemy_structures.closer_than(20, expansion).tags_not_in(self.unselectable_enemy_units.tags)
+            if enemy_proxies.exists:
+                for proxy in enemy_proxies:
+                    if proxy.type_id == UnitTypeId.PHOTONCANNON:
+                        for drone in self.bot.units(DRONE).tags_not_in(self.unselectable.tags).take(4, False):
+                            actions.append(drone.attack(proxy))
+                            self.unselectable.append(drone)
+                            self.unselectable_enemy_units.append(proxy)
+            if enemy_scouting_workers.exists:
+                for enemy_worker in enemy_scouting_workers:
+                    own_workers: Units = self.bot.units(DRONE).tags_not_in(self.unselectable.tags)
+                    if own_workers.exists:
+                        own_worker: Unit = own_workers.closest_to(enemy_worker)
+                        actions.append(own_worker.attack(enemy_worker))
+                        self.unselectable.append(own_worker)
+                        self.unselectable_enemy_units.append(enemy_worker)
 
         extra_queen_start_time = time.time()
         # EXTRA QUEEN CONTROL
