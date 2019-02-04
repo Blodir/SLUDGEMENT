@@ -34,7 +34,7 @@ class SpendingQueue():
         else:
             self.update_hatchery_priority()
 
-            max_workers = 36
+            max_workers = 28
             if self.scouting_manager.enemy_townhall_count == 2:
                 max_workers = 52
             if self.scouting_manager.enemy_townhall_count > 2:
