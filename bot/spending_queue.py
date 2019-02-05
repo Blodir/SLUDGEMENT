@@ -110,7 +110,11 @@ class SpendingQueue():
             
             # MAKE ROACH SPEED
             if (self.bot.units(LAIR).exists or self.bot.units(HIVE).exists) and not ROACHSPEED in self.bot.state.upgrades and not self.bot.already_pending_upgrade(ROACHSPEED):
-                self.spending_queue.reprioritize(ROACHSPEED, 26)
+                if UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
+                    if self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 50:
+                        self.spending_queue.reprioritize(ROACHSPEED, 20)
+                else:
+                    self.spending_queue.reprioritize(ROACHSPEED, 26)
 
             # MAKE HYDRAS
             if (self.bot.units(LAIR).exists or self.bot.units(HIVE).exists) and not self.bot.units(HYDRADEN).exists and not self.bot.already_pending(HYDRADEN) and (
