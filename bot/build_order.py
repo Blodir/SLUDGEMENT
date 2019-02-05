@@ -39,7 +39,7 @@ class BORepository():
                 OVERLORD
             )),
             BOStep(
-                lambda: self.bot.supply_used >= 13,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 17,
                 DRONE
             ),
@@ -49,7 +49,7 @@ class BORepository():
                 HATCHERY
             )),
             BOStep(
-                lambda: self.bot.supply_used >= 16,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 18,
                 DRONE
             ),
@@ -64,7 +64,7 @@ class BORepository():
                 SPAWNINGPOOL
             )),
             BOStep(
-                lambda: self.bot.supply_used >= 16,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 19,
                 DRONE
             ),
@@ -83,7 +83,7 @@ class BORepository():
                 OVERLORD
             ),
             BOStep(
-                lambda: self.bot.supply_used >= 13,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 16,
                 DRONE
             ),
@@ -93,7 +93,7 @@ class BORepository():
                 SPAWNINGPOOL
             ),
             BOStep(
-                lambda: self.bot.supply_used >= 15,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 17,
                 DRONE
             ),
@@ -103,7 +103,7 @@ class BORepository():
                 HATCHERY
             ),
             BOStep(
-                lambda: self.bot.supply_used >= 16,
+                lambda: True,
                 lambda: self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount >= 17,
                 DRONE
             ),
@@ -113,7 +113,7 @@ class BORepository():
                 EXTRACTOR
             )),
             (BOStep(
-                lambda: self.bot.supply_used >= 16,
+                lambda: True,
                 lambda: self.bot.units(LING).amount + self.bot.already_pending(LING) >= 6,
                 LING
             )),

@@ -73,6 +73,11 @@ class MyBot(sc2.BotAI):
         # remove destroyed unit from scouted units
         # TODO: REMVOE INJECT QUEEN FROM unit manager
         self.scouting_manager.remove_observation(unit_tag)
+        if self.unit_manager.chasing_workers.tags_in({unit_tag}).exists:
+            chasing_worker: Unit = self.unit_manager.chasing_workers.find_by_tag(unit_tag)
+            if isinstance(chasing_worker.order_target, int):
+                self.unit_manager.unselectable_enemy_units = self.unit_manager.unselectable_enemy_units.tags_not_in({chasing_worker.order_target})
+            self.unit_manager.chasing_workers= self.unit_manager.chasing_workers.tags_not_in({unit_tag})
         if self.unit_manager.unselectable.tags_in({unit_tag}).exists:
             self.unit_manager.unselectable = self.unit_manager.unselectable.tags_not_in({unit_tag})
         if self.unit_manager.unselectable_enemy_units.tags_in({unit_tag}).exists:
@@ -173,7 +178,7 @@ class MyBot(sc2.BotAI):
 
         # PRINT TIME
         execution_time = (time.time() - step_start_time) * 1000
-        #print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}ms')
+        print(f'Game time: {datetime.timedelta(seconds=math.floor(self.getTimeInSeconds()))}, Iteration: {iteration}, Execution time: {round(execution_time, 3)}ms')
 
     async def find_building_placement(self, unitId: UnitTypeId) -> Point2 or bool:
         if unitId == HATCHERY:

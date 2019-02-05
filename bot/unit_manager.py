@@ -30,6 +30,7 @@ class UnitManager():
         self.inject_queens: Units = Units([], self.bot._game_data)
         self.dead_tumors: Units = Units([], self.bot._game_data)
         self.spread_overlords: Units = Units([], self.bot._game_data)
+        self.chasing_workers: Units = Units([], self.bot._game_data)
 
     async def iterate(self, iteration):
         self.scouting_ttl -= 1
@@ -280,8 +281,18 @@ class UnitManager():
                     if own_workers.exists:
                         own_worker: Unit = own_workers.closest_to(enemy_worker)
                         actions.append(own_worker.attack(enemy_worker))
+                        self.chasing_workers.append(own_worker)
                         self.unselectable.append(own_worker)
                         self.unselectable_enemy_units.append(enemy_worker)
+        
+        # send back drones that are chasing workers
+        self.chasing_workers = self.bot.units.tags_in(self.chasing_workers.tags)
+        for drone in self.chasing_workers(DRONE):
+            if self.bot.units(HATCHERY).closest_to(drone.position).position.distance_to(drone.position) > 25:
+                if isinstance(drone.order_target, int):
+                    self.unselectable_enemy_units = self.unselectable_enemy_units.tags_not_in({drone.order_target})
+                self.chasing_workers = self.chasing_workers.tags_not_in({drone.tag})
+                actions.append(drone.gather(self.bot.main_minerals.random))
 
         extra_queen_start_time = time.time()
         # EXTRA QUEEN CONTROL
