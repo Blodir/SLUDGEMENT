@@ -209,7 +209,6 @@ class MyBot(sc2.BotAI):
             minerals_left = 1000
         if vespene_left > 1000:
             minerals_left = 1000
-        print(priorities)
         for p in priorities:
             construction_type = get_construction_type(p)
             if minerals_left < 0:
