@@ -106,7 +106,6 @@ class UnitManager():
         if self.bot.already_pending(DRONE) + self.bot.units(DRONE).amount > 25 * self.scouting_manager.enemy_townhall_count:
             if self.panic_scout_ttl <= 0:
                 if self.bot.units(OVERLORD).exists:
-                    print('panic scouting')
                     closest_overlord = self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags).closest_to(self.bot.enemy_start_locations[0])
                     original_position = closest_overlord.position
                     actions.append(closest_overlord.stop())
@@ -238,7 +237,7 @@ class UnitManager():
                     else:
                         self.bot._client.debug_text_world(f'idle', Point3((group.center.x, group.center.y, 10)), None, 12)
         execution_time = (time.time() - groups_start_time) * 1000
-        #print(f'//// Groups: {round(execution_time, 3)}ms')
+        print(f'//// Groups: {round(execution_time, 3)}ms')
 
         # DRONE DEFENSE
         for expansion in self.bot.owned_expansions:
@@ -315,7 +314,7 @@ class UnitManager():
                                 # regroup extra queens
                                 actions.append(queen.move(extra_queens.center))
         execution_time = (time.time() - extra_queen_start_time) * 1000
-        #print(f'//// Extra queens: {round(execution_time, 3)}ms')
+        print(f'//// Extra queens: {round(execution_time, 3)}ms')
 
         creep_start_time = time.time()
         # CREEP TUMORS
@@ -332,7 +331,7 @@ class UnitManager():
                     actions.append(tumor(AbilityId.BUILD_CREEPTUMOR, position))
                     self.dead_tumors.append(tumor)
         execution_time = (time.time() - creep_start_time) * 1000
-        #print(f'//// Creep: {round(execution_time, 3)}ms')
+        print(f'//// Creep: {round(execution_time, 3)}ms')
 
         # OVERLORD retreat from enemy structures and anti air stuff
         for overlord in self.bot.units(OVERLORD).tags_not_in(self.unselectable.tags):

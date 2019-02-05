@@ -122,7 +122,7 @@ class MyBot(sc2.BotAI):
         # SCOUT
         self.scouting_manager.iterate()
         execution_time = (time.time() - scout_start_time) * 1000
-        #print(f'Scouting: {round(execution_time, 3)}ms')
+        print(f'Scouting: {round(execution_time, 3)}ms')
 
         # ARMY COMPOSITION
         self.army_composition_manager.iterate()
@@ -131,7 +131,7 @@ class MyBot(sc2.BotAI):
         # UPDATE SPENDING QUEUE
         self.spending_queue.iterate()
         execution_time = (time.time() - spending_start_time) * 1000
-        #print(f'Spending: {round(execution_time, 3)}ms')
+        print(f'Spending: {round(execution_time, 3)}ms')
 
         rally_start_time = time.time()
         # SET RALLY POINTS
@@ -140,13 +140,13 @@ class MyBot(sc2.BotAI):
                 mineral_field = self.state.mineral_field.closest_to(hatch.position)
                 actions.append(hatch(AbilityId.RALLY_HATCHERY_WORKERS, mineral_field))
         execution_time = (time.time() - rally_start_time) * 1000
-        #print(f'Rally: {round(execution_time, 3)}ms')
+        print(f'Rally: {round(execution_time, 3)}ms')
 
         army_start_time = time.time()
         # MANAGE ARMY (order matters, manage army before worker redistribution to fix bug with unselectable units)
         actions.extend(await self.unit_manager.iterate(iteration))
         execution_time = (time.time() - army_start_time) * 1000
-        #print(f'Army: {round(execution_time, 3)}ms')
+        print(f'Army: {round(execution_time, 3)}ms')
 
         distribution_start_time = time.time()
         # REDISTRIBUTE WORKERS
@@ -156,20 +156,20 @@ class MyBot(sc2.BotAI):
         elif self.units(DRONE).idle.exists:
             await self.distribute_workers()
         execution_time = (time.time() - distribution_start_time) * 1000
-        #print(f'Redistribute: {round(execution_time, 3)}ms')
+        print(f'Redistribute: {round(execution_time, 3)}ms')
         
         spend_action_start_time = time.time()
         # SPEND RESOURCES
         # do after army management so unselectable units arent overwritten
         actions.extend(await self.create_spending_actions(self.spending_queue.get_spending_queue()))
         execution_time = (time.time() - spend_action_start_time) * 1000
-        #print(f'Spend Action: {round(execution_time, 3)}ms')
+        print(f'Spend Action: {round(execution_time, 3)}ms')
 
         action_exec_start_time = time.time()
         # EXECUTE ACTIONS
         await self.do_actions(actions)
         execution_time = (time.time() - action_exec_start_time) * 1000
-        #print(f'Action Exec: {round(execution_time, 3)}ms')
+        print(f'Action Exec: {round(execution_time, 3)}ms')
 
         # SEND DEBUG
         # self._client.debug_text_simple(f"Own army value: {self.scouting_manager.own_army_value}")
@@ -204,6 +204,12 @@ class MyBot(sc2.BotAI):
         minerals_left = self.minerals
         vespene_left = self.vespene
         larvae_left = self.units(LARVA).amount
+        # HACK: preventing timeout
+        if minerals_left > 1000:
+            minerals_left = 1000
+        if vespene_left > 1000:
+            minerals_left = 1000
+        print(priorities)
         for p in priorities:
             construction_type = get_construction_type(p)
             if minerals_left < 0:
@@ -230,16 +236,18 @@ class MyBot(sc2.BotAI):
                     cost = self.get_resource_value_full(unit_id)
                     army_unit_resource_values.append(list(cost))
 
-                optimal = optimal_combination([minerals_left, vespene_left, larvae_left], army_unit_resource_values)
-                if optimal:
-                    for idx, o in enumerate(optimal):
-                        for i in range(o):
-                            action = await self.create_construction_action(army_unit_ids[idx], ConstructionType.FROM_LARVA)
-                            if action != None:
-                                actions.append(action)
-                                minerals_left -= army_unit_resource_values[idx][0]
-                                vespene_left -= army_unit_resource_values[idx][1]
-                                larvae_left -= 1
+                # OPTIMIZATION: dont call expensive optimal combination at max supply
+                if self.supply_left < 200:
+                    optimal = optimal_combination([minerals_left, vespene_left, larvae_left], army_unit_resource_values)
+                    if optimal:
+                        for idx, o in enumerate(optimal):
+                            for i in range(o):
+                                action = await self.create_construction_action(army_unit_ids[idx], ConstructionType.FROM_LARVA)
+                                if action != None:
+                                    actions.append(action)
+                                    minerals_left -= army_unit_resource_values[idx][0]
+                                    vespene_left -= army_unit_resource_values[idx][1]
+                                    larvae_left -= 1
 
             elif p == ECO:
                 # make drone until no larva remaining
