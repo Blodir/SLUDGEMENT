@@ -108,7 +108,6 @@ class SpendingQueue():
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
                 self.spending_queue.reprioritize(ROACHWARREN, 30)
             
-            print((self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)), self.bot.units(DRONE).amount / 12.5)
             if (self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN)) and (
                 (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < math.floor(self.bot.units(DRONE).amount / 12.5)):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
