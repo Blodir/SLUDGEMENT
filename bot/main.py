@@ -108,7 +108,7 @@ class MyBot(sc2.BotAI):
         if iteration == 1:
             self.main_minerals = self.get_mineral_fields_for_expansion(self.start_location)
 
-            await self.chat_send("Bow down to your invertebrate overlords")
+            # await self.chat_send("Bow down to your invertebrate overlords")
             return
         if iteration == 2:
             self.enemy_natural = self.calculate_enemy_natural()
