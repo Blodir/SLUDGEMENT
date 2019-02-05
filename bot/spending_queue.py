@@ -106,7 +106,7 @@ class SpendingQueue():
                     self.spending_queue.reprioritize(ROACHWARREN, 30)
             
             if self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN) and (
-                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < self.bot.units(DRONE) / 10):
+                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < self.bot.units(DRONE).amount / 10):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
 
             # 2nd and 3rd EXTRACTOR if going for roaches !
