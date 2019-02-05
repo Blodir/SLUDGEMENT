@@ -57,6 +57,8 @@ class SpendingQueue():
                         distance_multiplier = 1.5
                     elif closest_distance < 20:
                         distance_multiplier = 1.5
+                    if self.bot.enemy_race == Race.Protoss and distance_multiplier > 1:
+                        distance_multiplier = 1.1
                 if self.scouting_manager.observed_enemy_units(LING).amount > 4 and distance_multiplier < 1:
                     # if they are making lings, have to match ling count exactly
                     distance_multiplier = 1
@@ -75,6 +77,10 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(ARMY, 38)
             else:
                 self.spending_queue.reprioritize(ARMY, 3)
+            
+            # HACK: ZvZ: all in at 50 drones
+            if self.bot.enemy_race == Race.Zerg and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 48 and self.bot.supply_used < 180:
+                self.spending_queue.reprioritize(ARMY, 38)
             
             queen_count = self.bot.units(QUEEN).amount + self.bot.queen_already_pending()
             if self.bot.calculate_combat_value(self.scouting_manager.observed_enemy_units.closer_than(60, self.bot.own_natural)) > 1.2 * self.scouting_manager.own_army_value:

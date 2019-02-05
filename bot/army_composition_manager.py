@@ -20,5 +20,6 @@ class ArmyCompositionManager():
                 self.ids_to_build.append(LING)
             if self.bot.units(ROACHWARREN).exists:
                 self.ids_to_build.append(ROACH)
-            if self.bot.units(HYDRADEN).exists:
+            # HACK: Make only 10 hydras in ZvZ
+            if self.bot.units(HYDRADEN).exists and not (self.bot.enemy_race == Race.Zerg and self.bot.units(HYDRA).amount + self.bot.already_pending(HYDRA) >= 10):
                 self.ids_to_build.append(HYDRA)
