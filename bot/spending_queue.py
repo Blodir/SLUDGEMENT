@@ -35,6 +35,8 @@ class SpendingQueue():
             self.update_hatchery_priority()
 
             max_workers = 28
+            if self.bot.enemy_race == Race.Protoss:
+                max_workers = 36
             if self.scouting_manager.enemy_townhall_count == 2:
                 max_workers = 52
             if self.scouting_manager.enemy_townhall_count > 2:
@@ -52,7 +54,7 @@ class SpendingQueue():
                     elif closest_distance > 20:
                         distance_multiplier = 1.5
                     elif closest_distance < 20:
-                        distance_multiplier = 2
+                        distance_multiplier = 1.5
                 if self.scouting_manager.observed_enemy_units(LING).amount > 4 and distance_multiplier < 1:
                     # if they are making lings, have to match ling count exactly
                     distance_multiplier = 1
@@ -115,13 +117,18 @@ class SpendingQueue():
                 UnitTypeId.STARGATE in self.scouting_manager.enemy_tech or (
                 self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 50)
             ):
-                self.spending_queue.reprioritize(HYDRADEN, 31)
+                self.spending_queue.reprioritize(HYDRADEN, 40)
             
             # MAKE LAIR
             if not self.bot.units(LAIR).exists and not self.bot.lair_already_pending() and not self.bot.units(HIVE).exists and (
-               self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32
+               self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 32 or (
+                   UnitTypeId.STARGATE in self.scouting_manager.enemy_tech
+               )
             ):
-                self.spending_queue.reprioritize(LAIR, 25)
+                if UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
+                    self.spending_queue.reprioritize(LAIR, 40)
+                else:
+                    self.spending_queue.reprioritize(LAIR, 25)
 
             self.overseer_ttl -= 1
             # OVERSEER - always have one
