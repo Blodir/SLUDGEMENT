@@ -48,7 +48,7 @@ class SpendingQueue():
             # TODO: consider enemy unit speed
             try:
                 if self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD}).exists:
-                    closest_distance = self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD}).closest_distance_to(self.bot.own_natural)
+                    closest_distance = self.scouting_manager.observed_enemy_units.exclude_type({OVERLORD, UnitTypeId.PROBE, UnitTypeId.DRONE, UnitTypeId.SCV}).closest_distance_to(self.bot.own_natural)
                     if closest_distance > 90:
                         distance_multiplier = 0.8
                     elif closest_distance > 70:
@@ -150,6 +150,16 @@ class SpendingQueue():
                     self.spending_queue.reprioritize(LAIR, 40)
                 else:
                     self.spending_queue.reprioritize(LAIR, 25)
+
+            # MAKE INFESTATION PIT
+            if not self.bot.units(UnitTypeId.INFESTATIONPIT).exists and self.bot.units(LAIR).exists and not self.bot.units(HIVE).exists and not self.bot.already_pending(UnitTypeId.INFESTATIONPIT) and (
+               self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 80):
+               self.spending_queue.reprioritize(UnitTypeId.INFESTATIONPIT, 20)
+
+            # MAKE HIVE
+            if self.bot.units(UnitTypeId.INFESTATIONPIT).exists and self.bot.units(LAIR).exists and not self.bot.units(HIVE).exists and not self.bot.hive_already_pending() and (
+               self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 80):
+               self.spending_queue.reprioritize(HIVE, 20)
 
             self.overseer_ttl -= 1
             # OVERSEER - always have one

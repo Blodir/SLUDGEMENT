@@ -345,6 +345,14 @@ class MyBot(sc2.BotAI):
                     counter += 1
         return counter
 
+    def hive_already_pending(self) -> int:
+        counter = 0
+        for hatch in self.units(HATCHERY):
+            for order in hatch.orders:
+                if order.ability.id == AbilityId.UPGRADETOHIVE_HIVE:
+                    counter += 1
+        return counter
+
     def get_resource_value(self, id: UnitTypeId) -> (int, int):
         unitData: UnitTypeData = self._game_data.units[id.value]
         return (unitData.cost.minerals, unitData.cost.vespene)
