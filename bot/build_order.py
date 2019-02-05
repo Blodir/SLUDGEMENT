@@ -114,11 +114,16 @@ class BORepository():
             )),
             (BOStep(
                 lambda: True,
-                lambda: self.bot.units(LING).amount + self.bot.already_pending(LING) >= 6,
+                lambda: self.bot.units(LING).amount + self.bot.already_pending(LING) >= 3,
                 LING
             )),
             (BOStep(
                 lambda: self.bot.supply_used >= 19,
+                lambda: self.bot.queen_already_pending() or self.bot.units(QUEEN).exists,
+                QUEEN
+            )),
+            (BOStep(
+                lambda: True,
                 lambda: self.bot.already_pending(OVERLORD) or self.bot.units(OVERLORD).amount == 3,
                 OVERLORD
             ))
