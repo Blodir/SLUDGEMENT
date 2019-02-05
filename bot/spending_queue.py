@@ -96,15 +96,23 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
 
             # ROACH WARREN            
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 28
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 34
                 or (self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 19)
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
-                self.spending_queue.reprioritize(ROACHWARREN, 30)
+                if UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
+                    if self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 50:
+                        self.spending_queue.reprioritize(ROACHWARREN, 30)
+                else:
+                    self.spending_queue.reprioritize(ROACHWARREN, 30)
             
+            if self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN) and (
+                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < self.bot.units(DRONE) / 10):
+                self.spending_queue.reprioritize(EXTRACTOR, 29)
+
             # 2nd and 3rd EXTRACTOR if going for roaches !
             if  (self.bot.units(ROACHWARREN).exists or self.bot.already_pending(ROACHWARREN)) and (
                 (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < 3) and (
-                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 35
+                self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 36
                 ):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
             
