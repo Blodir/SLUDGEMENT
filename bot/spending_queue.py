@@ -1,3 +1,5 @@
+import math
+
 from .priority_queue import PriorityQueue
 from sc2 import BotAI
 from sc2.data import Race
@@ -96,17 +98,19 @@ class SpendingQueue():
                 self.spending_queue.reprioritize(SPAWNINGPOOL, 30)
 
             # ROACH WARREN            
-            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 34
+            roach_eco = 34
+            if self.bot.enemy_race == Race.Terran:
+                roach_eco = 26
+            if UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
+                roach_eco = 50
+            if (self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= roach_eco
                 or (self.scouting_manager.enemy_proxies_exist and self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) > 19)
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
-                if UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
-                    if self.bot.units(DRONE).amount + self.bot.already_pending(DRONE) >= 50:
-                        self.spending_queue.reprioritize(ROACHWARREN, 30)
-                else:
-                    self.spending_queue.reprioritize(ROACHWARREN, 30)
+                self.spending_queue.reprioritize(ROACHWARREN, 30)
             
-            if self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN) and (
-                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < self.bot.units(DRONE).amount / 10):
+            print((self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)), self.bot.units(DRONE).amount / 12.5)
+            if (self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN)) and (
+                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < math.floor(self.bot.units(DRONE).amount / 12.5)):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
 
             # 2nd and 3rd EXTRACTOR if going for roaches !
