@@ -1,5 +1,6 @@
 from sc2 import BotAI
 from sc2.data import UnitTypeId
+from sc2.client import Race
 from .data import *
 from .scouting_manager import ScoutingManager
 
