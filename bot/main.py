@@ -62,6 +62,14 @@ class MyBot(sc2.BotAI):
                             positions.append(expansion)
                 for position in positions:
                     await self.do(unit.move(position, True))
+            elif self.units(OVERLORD).amount == 3:
+                await self.do(unit.move(self.enemy_natural.closest(list(self.enemy_expansions_not_main_or_nat)), True))
+            elif self.units(OVERLORD).amount == 4:
+                closest = self.enemy_natural.closest(list(self.enemy_expansions_not_main_or_nat))
+                exps: List[Point2] = list(self.enemy_expansions_not_main_or_nat)
+                if closest in exps:
+                    exps.remove(closest)
+                await self.do(unit.move(self.enemy_natural.closest(exps), True))
             else:
                 # Randomly spread overlords
                 if not self.unit_manager.spread_overlords.tags_in({unit.tag}).exists:
@@ -116,6 +124,12 @@ class MyBot(sc2.BotAI):
             actions.append(self.units(OVERLORD).first.move(self.enemy_natural))
             self.unit_manager.spread_overlords.append(self.units(OVERLORD).first)
             await self.do_actions(actions)
+            return
+        if iteration == 3:
+            self.enemy_expansions_not_main_or_nat = self.expansion_locations.copy()
+            for expansion in list(self.expansion_locations):
+                if expansion.distance_to(self.enemy_start_locations[0]) < 10 or expansion.distance_to(self.enemy_natural) < 10:
+                    del self.enemy_expansions_not_main_or_nat[expansion]
             return
 
         scout_start_time = time.time()
