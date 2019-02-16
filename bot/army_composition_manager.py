@@ -21,6 +21,12 @@ class ArmyCompositionManager():
                 self.ids_to_build.append(LING)
             if self.bot.units(ROACHWARREN).exists:
                 self.ids_to_build.append(ROACH)
-            # HACK: Make only 10 hydras in ZvZ
-            if self.bot.units(HYDRADEN).exists and not (self.bot.enemy_race == Race.Zerg and self.bot.units(HYDRA).amount + self.bot.already_pending(HYDRA) >= 10):
+            # ZvT: Adjust hydra count depending on enemy air unit count
+            if self.bot.enemy_race == Race.Terran and self.bot.units(HYDRA).amount < self.scouting_manager.observed_enemy_units.filter(lambda u: u.is_flying).amount:
+                self.ids_to_build.append(HYDRA)
+            # ZvP: Make hydras if theres a stargate
+            elif self.bot.enemy_race == Race.Protoss and self.bot.units(HYDRADEN).exists and UnitTypeId.STARGATE in self.scouting_manager.enemy_tech:
+                self.ids_to_build.append(HYDRA)
+            elif self.bot.enemy_race == Race.Zerg and self.bot.units(HYDRADEN).exists and self.bot.units(HYDRA).amount + self.bot.already_pending(HYDRA) >= 10 and self.bot.units(ROACH).amount + self.bot.already_pending(ROACH) > 20:
+                # ZvZ: make 10 hydras if already have 20+ roaches
                 self.ids_to_build.append(HYDRA)

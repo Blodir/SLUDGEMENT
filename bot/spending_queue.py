@@ -114,8 +114,13 @@ class SpendingQueue():
                 ) and self.bot.units(SPAWNINGPOOL).exists and not self.bot.units(ROACHWARREN).exists and not self.bot.already_pending(ROACHWARREN):
                 self.spending_queue.reprioritize(ROACHWARREN, 30)
             
+            # EXTRACTORs for hydras
+            workers_per_extractor = 12
+            if self.bot.vespene > 200:
+                workers_per_extractor = 16
+            
             if (self.bot.units(HYDRADEN).exists or self.bot.already_pending(HYDRADEN)) and (
-                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < math.floor(self.bot.units(DRONE).amount / 12.5)):
+                (self.bot.units(EXTRACTOR).amount + self.bot.already_pending(EXTRACTOR)) < math.floor(self.bot.units(DRONE).amount / workers_per_extractor)):
                 self.spending_queue.reprioritize(EXTRACTOR, 29)
 
             # 2nd and 3rd EXTRACTOR if going for roaches !
